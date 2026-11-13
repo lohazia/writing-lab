@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>복합양식 글쓰기 편집실</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   /* 배치: 위쪽 단계 띠 + 한 단계씩 넘기는 작업 책상. 표현하기만 2단(편집기 | 개요 참고) */
@@ -143,6 +143,38 @@ table.chk .bad{color:var(--warn);font-weight:600}
 .tile{border:1px solid var(--line);border-radius:10px;padding:10px 14px}
 .tile b{display:block;font-family:var(--display);font-size:1.6rem;font-weight:400;line-height:1.2}
 .tile span{font-size:.85rem;color:var(--muted)}
+/* 완성 글 웹페이지: 학생이 고른 분위기에 따라 색이 정해지고, 화면 테마와는 따로 움직인다 */
+.essay{--e-bg:#f6f1e7;--e-ink:#2b2a27;--e-sub:#7b7468;--e-line:#ddd3c0;--e-acc:#8a5a44;--e-card:#efe7d8;
+  background:var(--e-bg);color:var(--e-ink);border-radius:18px;overflow:hidden;font-family:"Gowun Batang","Nanum Myeongjo","Batang",serif;box-shadow:0 18px 40px -24px rgba(0,0,0,.45)}
+.essay.t-night{--e-bg:#141a2b;--e-ink:#ebe7df;--e-sub:#9ba5bb;--e-line:#2c3552;--e-acc:#e6c27c;--e-card:#1c2439}
+.essay.t-spring{--e-bg:#f2f7f1;--e-ink:#25332b;--e-sub:#6a7e72;--e-line:#d2e0d4;--e-acc:#cf6f85;--e-card:#e6f0e7}
+.essay .in{max-width:680px;margin:0 auto;padding:56px 28px 44px}
+.essay .eyebrow{font-family:var(--body);font-size:.78rem;letter-spacing:.14em;color:var(--e-sub);display:flex;gap:10px;align-items:center}
+.essay .eyebrow::before{content:"";width:34px;height:2px;background:var(--e-acc)}
+.essay h2{font-family:inherit;font-weight:700;font-size:clamp(1.9rem,4.6vw,2.9rem);line-height:1.3;letter-spacing:-.01em;margin:18px 0 10px;color:var(--e-ink);word-break:keep-all;overflow-wrap:break-word;text-wrap:balance}
+.essay .topic{color:var(--e-acc);font-size:1.02rem}
+.essay .by{font-family:var(--body);font-size:.86rem;color:var(--e-sub);margin-top:22px;padding-bottom:22px;border-bottom:1px solid var(--e-line)}
+.essay .eb{padding-top:30px;font-size:1.09rem;line-height:2.05}
+.essay .eb p{margin:0 0 1.5em;white-space:pre-wrap;word-break:keep-all;overflow-wrap:break-word}
+.essay .eb p.lead1{font-size:1.14em;line-height:1.95}
+.essay figure{margin:2.2em 0}
+.essay figure img{display:block;max-width:100%;margin:0 auto;border-radius:6px;box-shadow:0 14px 30px -18px rgba(0,0,0,.6)}
+.essay figcaption,.essay .mcap{font-family:var(--body);font-size:.84rem;line-height:1.6;color:var(--e-sub);margin-top:12px;text-align:center}
+.essay figcaption b,.essay .mcap b{color:var(--e-acc);font-weight:600;margin-right:6px}
+.essay .em{margin:2.2em 0}
+.essay .player{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;box-shadow:0 14px 30px -18px rgba(0,0,0,.6)}
+.essay .player.audio{aspect-ratio:auto;height:180px}
+.essay .player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.essay audio{display:block;width:100%}
+.essay video{display:block;max-width:100%;margin:0 auto;border-radius:12px}
+.essay .linkcard{display:block;background:var(--e-card);border:1px solid var(--e-line);border-radius:12px;padding:14px 18px;font-family:var(--body);font-size:.9rem;color:var(--e-ink);text-decoration:none;overflow-wrap:anywhere}
+.essay .linkcard span{display:block;color:var(--e-acc);font-size:.8rem;margin-bottom:2px}
+.essay .mcap a{color:var(--e-sub)}
+.essay .end{text-align:center;color:var(--e-acc);letter-spacing:.6em;margin:2.4em 0 1.6em}
+.essay .esrc{font-family:var(--body);font-size:.82rem;line-height:1.7;color:var(--e-sub);border-top:1px solid var(--e-line);padding-top:16px}
+.essay .esrc ol{margin:6px 0 0;padding-left:20px}
+.essay .empty{color:var(--e-sub)}
+@media (max-width:520px){.essay .in{padding:36px 20px 32px}.essay .eb{font-size:1.02rem;line-height:1.95}}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.92rem;z-index:20;max-width:calc(100% - 32px)}
 .hide{display:none!important}
 ol.plan{margin:0;padding-left:20px;color:var(--muted)}
@@ -211,7 +243,7 @@ function fresh(){
     ideas:[],pickWhy:"",
     outline:[0,1,2,3,4].map(function(i){return {part:i===0?"처음":i===4?"끝":"중간",text:"",types:[],why:""};}),
     title:"",blocks:[],self:[null,null,null,null,null,null],peer:[null,null,null,null,null,null],
-    peerName:"",good:"",fix:"",revised:"",reflect:"",firstPara:"",oPeerName:"",oPeer:"",step:0};
+    peerName:"",good:"",fix:"",revised:"",reflect:"",firstPara:"",oPeerName:"",oPeer:"",theme:"paper",step:0};
 }
 var viewState=null, pickMode="load", T=null, tIdx=-1, LV=null, liveLast="", liveOk=null;
 var S=fresh(), saved=true, saveFail=false, timer=null, peerMode=false, preview=false, lastOutline=0, pendingKind=null, resetArm=false, dl=null;
@@ -299,8 +331,24 @@ function playerHTML(b){
   if(/\.(mp4|webm)([?#]|$)/i.test(u))return '<video controls preload="none" src="'+esc(u)+'"></video>';
   return "";
 }
+var THEMES=[["paper","종이"],["night","밤"],["spring","봄"]];
+function essayHTML(st){
+  var u=st.user||{ban:"",num:"",name:""},n=0,src=[],first=true,th=st.theme||"paper";
+  var body=st.blocks.map(function(b){
+    if(b.type==="text"){if(!b.text.trim())return "";var c=first?' class="lead1"':"";first=false;return '<p'+c+'>'+esc(b.text)+'</p>';}
+    n++;var s=b.own?"직접 만든 자료":(b.source||"").trim();src.push("["+b.kind+"] "+(s||"출처 없음"));
+    var cap='<b>자료 '+n+'</b>'+esc(b.cap||b.kind);
+    if(b.type==="img")return b.src?'<figure><img src="'+b.src+'" alt="'+esc(b.cap||b.kind)+'"><figcaption>'+cap+'</figcaption></figure>':(b.hadImg?'<div class="em"><div class="linkcard"><span>'+esc(b.kind)+'</span>이미지는 실시간 화면에서 보이지 않습니다. 제출한 PDF에서 확인하세요.</div><div class="mcap">'+cap+'</div></div>':'');
+    var ok=/^https?:\/\//.test(b.url||""),pl=playerHTML(b),a=ok?'<a href="'+esc(b.url)+'" target="_blank" rel="noopener">새 탭에서 열기</a>':'';
+    if(pl)return '<div class="em">'+pl+'<div class="mcap">'+cap+(a?' · '+a:'')+'</div></div>';
+    return ok?'<div class="em"><a class="linkcard" href="'+esc(b.url)+'" target="_blank" rel="noopener"><span>'+esc(b.kind)+' · 눌러서 열기</span>'+esc(b.url)+'</a><div class="mcap">'+cap+'</div></div>':'';
+  }).join("");
+  return '<div class="essay t-'+esc(th)+'"><div class="in"><div class="eyebrow">정화중학교 누리집 · 학생 글마당</div><h2>'+esc(st.title||"(제목 없음)")+'</h2>'+(st.plan.topic?'<div class="topic">'+esc(st.plan.topic)+'</div>':'')+'<div class="by">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+'</div>'+
+    '<div class="eb">'+(body||'<p class="empty">아직 쓴 내용이 없습니다.</p>')+'</div><div class="end">···</div>'+(src.length?'<div class="esrc">자료 출처<ol>'+src.map(function(s){return '<li>'+esc(s)+'</li>';}).join("")+'</ol></div>':'')+'</div></div>';
+}
 function articleHTML(st,live){
   st=st||S;
+  if(live)return essayHTML(st);
   var u=st.user||{ban:"",num:"",name:""},n=0,src=[];
   var body=st.blocks.map(function(b){
     if(b.type==="text")return b.text.trim()?'<p>'+esc(b.text)+'</p>':'';
@@ -319,7 +367,8 @@ function viewerView(){
   var btns=inT?'<button class="btn" data-act="tnav" data-d="-1"'+(tIdx<=0?" disabled":"")+'>← 이전 학생</button><button class="btn" data-act="tnav" data-d="1"'+(tIdx>=T.list.length-1?" disabled":"")+'>다음 학생 →</button><button class="btn" data-act="viewoff">목록으로</button>'
     :inL?'<button class="btn" data-act="viewoff">목록으로</button>':'<button class="btn" data-act="viewload">다른 작품 불러오기</button><button class="btn" data-act="viewoff">닫기</button>';
   return '<div class="stack"><div class="peerbar"><b>'+(st===S?"내 완성 글":(inL?"지금 쓰는 중 · 2학년 ":"작품 감상 · 2학년 ")+esc(u.ban)+"반 "+esc(u.num)+"번 "+esc(u.name))+'</b><div class="btns">'+btns+'</div></div>'+
-    (canEmbed?'':'<div class="todo">이 화면에서는 영상과 음악이 링크로 열립니다. 웹에 올린 주소로 접속하면 글 안에서 바로 재생됩니다.</div>')+articleHTML(st,true)+
+    (canEmbed?'':'<div class="todo">이 화면에서는 영상과 음악이 링크로 열립니다. 웹에 올린 주소로 접속하면 글 안에서 바로 재생됩니다.</div>')+
+    (st===S?'<div class="btns"><span style="font-size:.9rem;font-weight:500">글의 분위기</span>'+THEMES.map(function(t){var on=(S.theme||"paper")===t[0];return '<button class="chip '+(on?"on":"")+'" aria-pressed="'+on+'" data-act="theme" data-t="'+t[0]+'">'+t[1]+'</button>';}).join("")+'<span class="count">글의 주제와 독자에 어울리는 분위기를 골라 보세요.</span></div>':'')+articleHTML(st,true)+
     (inT||inL?'<details class="card"'+(inL?' open':'')+'><summary style="cursor:pointer;font-weight:600">활동 기록 전체 보기 (계획, 개요, 평가, 느낀 점)</summary><div class="sheet" style="margin-top:12px">'+withState(st,function(){return lesson1HTML()+lesson2HTML();})+'</div></details>':'')+'</div>';
 }
 function teacherView(){
@@ -706,6 +755,7 @@ var A={
   import:function(){pickMode="load";var f=$("#jsonPick");f.value="";f.click();},
   viewload:function(){pickMode="view";var f=$("#jsonPick");f.value="";f.click();},
   viewmine:function(){viewState=S;render();},
+  theme:function(d){S.theme=d.t;touch();render(true);},
   viewoff:function(){viewState=null;tIdx=-1;render();if(LV)livePoll();},
   teacher:function(){T={list:[],bad:[]};render();},
   live:function(){LV={key:"",rows:[],err:"",filter:"",arm:false,timer:setInterval(livePoll,10000)};render();},
