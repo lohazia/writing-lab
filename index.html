@@ -175,6 +175,9 @@ table.chk .bad{color:var(--warn);font-weight:600}
 .essay .esrc ol{margin:6px 0 0;padding-left:20px}
 .essay .empty{color:var(--e-sub)}
 @media (max-width:520px){.essay .in{padding:36px 20px 32px}.essay .eb{font-size:1.02rem;line-height:1.95}}
+.chartbox{border:1.5px dashed var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--accent-soft)}
+.chrow{display:grid;grid-template-columns:minmax(0,1fr) 110px auto;gap:8px;align-items:center}
+.chartbox canvas{width:100%;max-width:520px;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.92rem;z-index:20;max-width:calc(100% - 32px)}
 .hide{display:none!important}
 ol.plan{margin:0;padding-left:20px;color:var(--muted)}
@@ -338,7 +341,7 @@ function essayHTML(st){
     if(b.type==="text"){if(!b.text.trim())return "";var c=first?' class="lead1"':"";first=false;return '<p'+c+'>'+esc(b.text)+'</p>';}
     n++;var s=b.own?"직접 만든 자료":(b.source||"").trim();src.push("["+b.kind+"] "+(s||"출처 없음"));
     var cap='<b>자료 '+n+'</b>'+esc(b.cap||b.kind);
-    if(b.type==="img")return b.src?'<figure><img src="'+b.src+'" alt="'+esc(b.cap||b.kind)+'"><figcaption>'+cap+'</figcaption></figure>':(b.hadImg?'<div class="em"><div class="linkcard"><span>'+esc(b.kind)+'</span>이미지는 실시간 화면에서 보이지 않습니다. 제출한 PDF에서 확인하세요.</div><div class="mcap">'+cap+'</div></div>':'');
+    if(b.type==="img")return imgSrc(b)?'<figure><img src="'+imgSrc(b)+'" alt="'+esc(b.cap||b.kind)+'"><figcaption>'+cap+'</figcaption></figure>':(b.hadImg?'<div class="em"><div class="linkcard"><span>'+esc(b.kind)+'</span>이미지는 실시간 화면에서 보이지 않습니다. 제출한 PDF에서 확인하세요.</div><div class="mcap">'+cap+'</div></div>':'');
     var ok=/^https?:\/\//.test(b.url||""),pl=playerHTML(b),a=ok?'<a href="'+esc(b.url)+'" target="_blank" rel="noopener">새 탭에서 열기</a>':'';
     if(pl)return '<div class="em">'+pl+'<div class="mcap">'+cap+(a?' · '+a:'')+'</div></div>';
     return ok?'<div class="em"><a class="linkcard" href="'+esc(b.url)+'" target="_blank" rel="noopener"><span>'+esc(b.kind)+' · 눌러서 열기</span>'+esc(b.url)+'</a><div class="mcap">'+cap+'</div></div>':'';
@@ -353,7 +356,7 @@ function articleHTML(st,live){
   var body=st.blocks.map(function(b){
     if(b.type==="text")return b.text.trim()?'<p>'+esc(b.text)+'</p>':'';
     n++;var s=b.own?"직접 만든 자료":(b.source||"").trim();src.push("["+b.kind+"] "+(s||"출처 없음"));
-    if(b.type==="img")return b.src?'<figure><img src="'+b.src+'" alt="'+esc(b.cap||b.kind)+'"><figcaption>자료 '+n+'. '+esc(b.cap||"")+'</figcaption></figure>':(b.hadImg?'<div class="media"><b>자료 '+n+'. '+esc(b.kind)+'</b> '+esc(b.cap||"")+'<br><small>이미지는 실시간 화면에서 보이지 않습니다. 제출한 PDF에서 확인하세요.</small></div>':'');
+    if(b.type==="img")return imgSrc(b)?'<figure><img src="'+imgSrc(b)+'" alt="'+esc(b.cap||b.kind)+'"><figcaption>자료 '+n+'. '+esc(b.cap||"")+'</figcaption></figure>':(b.hadImg?'<div class="media"><b>자료 '+n+'. '+esc(b.kind)+'</b> '+esc(b.cap||"")+'<br><small>이미지는 실시간 화면에서 보이지 않습니다. 제출한 PDF에서 확인하세요.</small></div>':'');
     var ok=/^https?:\/\//.test(b.url||""),link=ok?'<a href="'+esc(b.url)+'" target="_blank" rel="noopener">'+esc(b.url)+'</a>':'',pl=live?playerHTML(b):"";
     return '<div class="media"><b>자료 '+n+'. '+esc(b.kind)+'</b> '+esc(b.cap||"")+(pl?pl+'<small>재생되지 않으면 새 탭에서 열기 · '+link+'</small>':(link?'<br>'+link:''))+'</div>';
   }).join("");
@@ -498,11 +501,53 @@ V[4]=function(){
     '<div class="otable">'+rows+'</div></div>'+todoBox(4)+
     '<div class="card stack"><h3 style="font-size:1.15rem">개요 짝 점검 <small style="font-family:var(--body);font-size:.85rem;color:var(--muted)">선택 · 시간이 남으면</small></h3>'+(S.oPeer.trim()?'<div class="ok"><b>'+esc(S.oPeerName||"짝")+'</b>의 의견 · '+esc(S.oPeer)+'</div>':'<p class="lead">단추를 누르고 크롬북을 짝에게 건네면, 짝이 내 계획과 개요를 읽고 의견을 남깁니다.</p>')+'<div class="btns"><button class="btn" data-act="opeeron">'+(S.oPeer.trim()?"의견 다시 받기":"짝에게 개요 보여 주기")+'</button></div></div>'+foot(4)+'</div>';
 };
+/* ---------- 그래프 만들기 ---------- */
+var chartEdit=null;
+function niceMax(m){if(!(m>0))return 1;var p=Math.pow(10,Math.floor(Math.log(m)/Math.LN10)),f=m/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+function fmtNum(v){return (Math.round(v*100)/100).toLocaleString("ko-KR");}
+function chartRows(d){return d.rows.filter(function(r){return String(r[0]).trim()&&String(r[1]).trim()!==""&&isFinite(+r[1]);}).map(function(r){return [String(r[0]).trim(),Math.max(0,+r[1])];});}
+function drawChart(d,cv){
+  cv=cv||document.createElement("canvas");cv.width=800;cv.height=500;
+  var g=cv.getContext("2d"),F='"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif',rows=chartRows(d);
+  g.fillStyle="#ffffff";g.fillRect(0,0,800,500);
+  g.textBaseline="alphabetic";g.textAlign="center";g.fillStyle="#1b2a31";g.font="600 26px "+F;g.fillText(d.title||"",400,46,760);
+  if(!rows.length){g.fillStyle="#8a979c";g.font="18px "+F;g.fillText("항목과 값을 입력하면 그래프가 그려집니다",400,260);return cv;}
+  var L=84,R=764,T=92,B=418,n=rows.length,step=(R-L)/n,max=niceMax(Math.max.apply(null,rows.map(function(r){return r[1];})));
+  var X=function(i){return L+step*(i+0.5);},Y=function(v){return B-(B-T)*v/max;};
+  g.font="14px "+F;g.textBaseline="middle";
+  for(var k=0;k<=4;k++){var y=B-(B-T)*k/4;g.strokeStyle=k?"#e1e8e4":"#1b2a31";g.lineWidth=k?1:1.5;g.beginPath();g.moveTo(L,y);g.lineTo(R,y);g.stroke();g.textAlign="right";g.fillStyle="#586b73";g.fillText(fmtNum(max*k/4),L-10,y);}
+  if(d.unit){g.textAlign="left";g.fillStyle="#586b73";g.fillText("("+d.unit+")",18,T-24);}
+  g.textBaseline="alphabetic";g.textAlign="center";
+  if(d.type==="line"){
+    g.strokeStyle="#1c7a54";g.lineWidth=3;g.lineJoin="round";g.beginPath();rows.forEach(function(r,i){if(i)g.lineTo(X(i),Y(r[1]));else g.moveTo(X(i),Y(r[1]));});g.stroke();
+    rows.forEach(function(r,i){g.fillStyle="#ffffff";g.beginPath();g.arc(X(i),Y(r[1]),6,0,7);g.fill();g.strokeStyle="#1c7a54";g.lineWidth=3;g.stroke();});
+  }else{
+    var w=Math.min(72,step*0.62);g.fillStyle="#1c7a54";rows.forEach(function(r,i){var y=Y(r[1]);g.fillRect(X(i)-w/2,y,w,B-y);});
+  }
+  rows.forEach(function(r,i){
+    g.fillStyle="#1b2a31";g.font="600 15px "+F;g.fillText(fmtNum(r[1]),X(i),Y(r[1])-(d.type==="line"?14:8));
+    var t=r[0],fs=15;g.font=fs+"px "+F;while(fs>11&&g.measureText(t).width>step-8){fs--;g.font=fs+"px "+F;}
+    while(t.length>1&&g.measureText(t).width>step-8)t=t.slice(0,-2)+"…";
+    g.fillStyle="#3c4b52";g.fillText(t,X(i),B+26);
+  });
+  return cv;
+}
+function imgSrc(b){if(b.src)return b.src;if(b.chart){try{return drawChart(b.chart).toDataURL("image/jpeg",0.85);}catch(e){}}return "";}
+function chartEditorHTML(){
+  var d=chartEdit.d;
+  return '<div class="chartbox"><div class="grid2"><label class="f" for="ch-title"><span>그래프 제목</span><input type="text" id="ch-title" data-ch="title" value="'+esc(d.title)+'" placeholder="예: 우리 반 하루 평균 수면 시간"></label><label class="f" for="ch-unit"><span>단위 <small>선택</small></span><input type="text" id="ch-unit" data-ch="unit" value="'+esc(d.unit)+'" placeholder="예: 명, 시간, %"></label></div>'+
+    '<div class="chips"><button class="chip '+(d.type!=="line"?"on":"")+'" aria-pressed="'+(d.type!=="line")+'" data-act="chtype" data-t="bar">막대그래프</button><button class="chip '+(d.type==="line"?"on":"")+'" aria-pressed="'+(d.type==="line")+'" data-act="chtype" data-t="line">꺾은선그래프</button><span class="count">크기를 비교할 때는 막대, 변화를 보여 줄 때는 꺾은선이 알맞습니다.</span></div>'+
+    d.rows.map(function(r,k){return '<div class="chrow"><input type="text" id="ch-l'+k+'" data-chl="'+k+'" value="'+esc(r[0])+'" placeholder="항목 '+(k+1)+'" aria-label="항목 '+(k+1)+'"><input type="number" id="ch-v'+k+'" data-chv="'+k+'" value="'+esc(r[1])+'" placeholder="값" min="0" step="any" aria-label="값 '+(k+1)+'"><button class="btn sm danger" data-act="chdel" data-k="'+k+'"'+(d.rows.length<=2?" disabled":"")+'>삭제</button></div>';}).join("")+
+    '<div class="btns"><button class="btn sm" data-act="chadd"'+(d.rows.length>=8?" disabled":"")+'>항목 추가</button><span class="count">항목은 2~8개</span></div>'+
+    '<canvas id="chPrev" width="800" height="500" role="img" aria-label="그래프 미리보기"></canvas>'+
+    '<div class="btns"><button class="btn pri" data-act="chok">이 그래프 넣기</button><button class="btn" data-act="chcancel">취소</button></div>'+
+    '<p class="count">숫자를 가져온 곳을 아래 출처 칸에 적으세요. 직접 조사한 값이면 조사한 방법을 적습니다.</p></div>';
+}
 function blockHTML(b,i,fixed){
   var ctl=fixed===true?'<div class="btns"><button class="btn sm danger" data-act="bdel" data-i="'+i+'">삭제</button></div>':'<div class="btns"><button class="btn sm" aria-label="위로" data-act="bup" data-i="'+i+'"'+(i===0?" disabled":"")+'>↑</button><button class="btn sm" aria-label="아래로" data-act="bdown" data-i="'+i+'"'+(i===S.blocks.length-1?" disabled":"")+'>↓</button><button class="btn sm danger" data-act="bdel" data-i="'+i+'">삭제</button></div>';
   if(b.type==="text")return '<div class="block"><div class="bh"><span class="tag">문단</span>'+ctl+'</div><textarea id="f-blocks-'+i+'-text" aria-label="문단 내용" data-bind="blocks.'+i+'.text" rows="5" placeholder="'+esc(b.ph||"여기에 글을 씁니다.")+'">'+esc(b.text)+'</textarea></div>';
   var src='<div class="grid2"><label class="f" for="f-blocks-'+i+'-cap"><span>자료 설명</span><input type="text" id="f-blocks-'+i+'-cap" data-bind="blocks.'+i+'.cap" value="'+esc(b.cap)+'" placeholder="무엇을 보여 주는 자료인가?"></label><label class="f" for="f-blocks-'+i+'-source"><span>출처</span><input type="text" id="f-blocks-'+i+'-source" data-bind="blocks.'+i+'.source" value="'+esc(b.source)+'" placeholder="누가 만들었나, 어디서 가져왔나"'+(b.own?" disabled":"")+'></label></div><label style="font-size:.9rem;display:flex;gap:6px;align-items:center"><input type="checkbox" id="f-blocks-'+i+'-own" data-act="own" data-i="'+i+'"'+(b.own?" checked":"")+'> 내가 직접 찍거나 만든 자료입니다</label>';
-  if(b.type==="img")return '<div class="block"><div class="bh"><span class="tag">'+b.kind+'</span>'+ctl+'</div>'+(b.src?'<img src="'+b.src+'" alt="'+esc(b.cap||b.kind)+'">':'')+'<div class="btns"><button class="btn sm" data-act="pickimg" data-i="'+i+'">'+(b.src?"이미지 바꾸기":"이미지 파일 고르기")+'</button></div>'+src+'</div>';
+  if(b.type==="img")return '<div class="block"><div class="bh"><span class="tag">'+b.kind+'</span>'+ctl+'</div>'+(b.src?'<img src="'+b.src+'" alt="'+esc(b.cap||b.kind)+'">':'')+'<div class="btns">'+(b.kind==="표·그래프"?'<button class="btn sm pri" data-act="chopen" data-i="'+i+'">'+(b.chart?"그래프 고치기":"그래프 만들기")+'</button>':'')+'<button class="btn sm" data-act="pickimg" data-i="'+i+'">'+(b.src?"이미지 바꾸기":"이미지 파일 고르기")+'</button></div>'+(chartEdit&&chartEdit.i===i?chartEditorHTML():'')+src+'</div>';
   return '<div class="block"><div class="bh"><span class="tag">'+b.kind+'</span>'+ctl+'</div><label class="f" for="f-blocks-'+i+'-url"><span>링크 주소</span><input type="url" id="f-blocks-'+i+'-url" data-bind="blocks.'+i+'.url" value="'+esc(b.url)+'" placeholder="https://"></label>'+src+'</div>';
 }
 V[5]=function(){
@@ -598,6 +643,7 @@ function render(keepScroll){
   $("#nav").classList.toggle("hide",!!(peerMode||viewState||T||LV));
   $("#main").innerHTML=viewState?viewerView():LV?liveView():T?teacherView():peerMode==="outline"?outlinePeerView():peerMode?peerView():V[S.step]();
   renderWho();renderNav();
+  if(chartEdit){var pc=$("#chPrev");if(pc)drawChart(chartEdit.d,pc);else chartEdit=null;}
   window.scrollTo(0,keepScroll?y:0);
 }
 
@@ -742,6 +788,19 @@ var A={
   addtext:function(){S.blocks.push({id:uid(),type:"text",text:""});touch();render(true);},
   addimg:function(d){S.blocks.push(newMat(d.kind));touch();render(true);},
   addlink:function(d){S.blocks.push(newMat(d.kind));touch();render(true);},
+  chopen:function(d){var b=S.blocks[+d.i];chartEdit={i:+d.i,d:b.chart?JSON.parse(JSON.stringify(b.chart)):{title:b.cap||"",unit:"",type:"bar",rows:[["",""],["",""],["",""]]}};render(true);},
+  chtype:function(d){chartEdit.d.type=d.t;render(true);},
+  chadd:function(){if(chartEdit.d.rows.length<8){chartEdit.d.rows.push(["",""]);render(true);}},
+  chdel:function(d){if(chartEdit.d.rows.length>2){chartEdit.d.rows.splice(+d.k,1);render(true);}},
+  chcancel:function(){chartEdit=null;render(true);},
+  chok:function(){
+    var b=S.blocks[chartEdit.i],d=chartEdit.d;
+    if(!b){chartEdit=null;render(true);return;}
+    if(chartRows(d).length<2){toast("항목과 값을 2개 이상 입력해 주세요.");return;}
+    if(!d.title.trim()){toast("그래프 제목을 적어 주세요.");return;}
+    b.chart=JSON.parse(JSON.stringify(d));b.src=drawChart(d).toDataURL("image/jpeg",0.9);if(!(b.cap||"").trim())b.cap=d.title;
+    chartEdit=null;touch();render(true);toast("그래프를 넣었습니다. 출처를 적어 주세요.");
+  },
   pickimg:function(d){pendingKind=+d.i;var f=$("#imgPick");f.value="";f.click();},
   own:function(d,el){S.blocks[+d.i].own=el.checked;touch();render(true);},
   bup:function(d){var i=+d.i;if(i<1)return;var b=S.blocks.splice(i,1)[0];S.blocks.splice(i-1,0,b);touch();render(true);},
@@ -794,6 +853,7 @@ var A={
 };
 document.addEventListener("click",function(e){
   var el=e.target.closest("[data-act]");if(!el||el.tagName==="INPUT"&&el.type==="checkbox")return;
+  if(/^(go|bup|bdown|bdel|scaffold|peeron|viewmine|addmat|addtext|addimg|addlink)$/.test(el.dataset.act))chartEdit=null;
   var f=A[el.dataset.act];if(f)f(el.dataset,el);
 });
 document.addEventListener("change",function(e){
@@ -809,6 +869,11 @@ document.addEventListener("change",function(e){
 document.addEventListener("input",function(e){
   var el=e.target;if(!el.dataset||!el.dataset.bind)return;
   setPath(el.dataset.bind,el.value);touch();
+});
+document.addEventListener("input",function(e){
+  var el=e.target,ds=el.dataset;if(!chartEdit||!ds)return;
+  if(ds.ch)chartEdit.d[ds.ch]=el.value;else if(ds.chl!=null)chartEdit.d.rows[+ds.chl][0]=el.value;else if(ds.chv!=null)chartEdit.d.rows[+ds.chv][1]=el.value;else return;
+  var pc=$("#chPrev");if(pc)drawChart(chartEdit.d,pc);
 });
 document.addEventListener("focusin",function(e){if(e.target.dataset&&e.target.dataset.outline!=null)lastOutline=+e.target.dataset.outline;});
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="ideaIn"&&!e.isComposing){e.preventDefault();A.addidea();}});
