@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>읽기 점검 독서실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 배치: 위쪽 단계 띠 + 한 단계씩 넘기는 작업 책상 */
+  --bg:#f1f5f2; --surface:#ffffff; --ink:#1b2a31; --muted:#586b73; --line:#d3ddd9;
+  --accent:#1c7a54; --accent-ink:#ffffff; --accent-soft:#def1e6; --mark:#ffe27a;
+  --warn:#b8402a; --warn-soft:#fbe7e1;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11181b; --surface:#1a2428; --ink:#e5eeea; --muted:#9db1ad; --line:#2e3c41;
+    --accent:#5fc798; --accent-ink:#0d1a14; --accent-soft:#1c392c; --mark:#7a6412;
+    --warn:#f09079; --warn-soft:#3a211b; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11181b; --surface:#1a2428; --ink:#e5eeea; --muted:#9db1ad; --line:#2e3c41;
+  --accent:#5fc798; --accent-ink:#0d1a14; --accent-soft:#1c392c; --mark:#7a6412;
+  --warn:#f09079; --warn-soft:#3a211b; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65}
+button,input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.25;text-wrap:balance;margin:0}
+p{margin:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 64px}
+header.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:16px 0 10px}
+.brand{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.brand h1{font-size:1.7rem}
+.brand span{color:var(--muted);font-size:.9rem}
+.who{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}
+.dot.off{background:var(--warn)}
+nav.steps{display:flex;gap:6px;overflow-x:auto;padding:6px 0 12px;align-items:center}
+.lesson{flex:none;font-family:var(--display);font-size:.95rem;color:var(--muted);padding:0 4px 0 8px}
+.lesson:first-child{padding-left:0}
+.stepbtn{flex:none;display:flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.9rem;white-space:nowrap}
+.stepbtn .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--bg);font-size:.75rem;font-variant-numeric:tabular-nums}
+.stepbtn.done .n{background:var(--accent);color:var(--accent-ink)}
+.stepbtn.cur{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.stepbtn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1 1 220px;min-width:0}
+.head{display:flex;gap:10px 16px;justify-content:space-between;align-items:flex-end;flex-wrap:wrap}
+.head h2{font-size:1.5rem}
+.head .meta{color:var(--muted);font-size:.88rem}
+.lead{color:var(--muted);max-width:65ch}
+.keyq{background:var(--mark);color:#2b2300;border-radius:10px;padding:10px 14px;font-weight:500}
+:root[data-theme="dark"] .keyq{color:#fff3c2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .keyq{color:#fff3c2}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.9rem;font-weight:500}
+label.f small{font-weight:400;color:var(--muted)}
+input[type=text],input[type=number],input[type=url],textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--bg);padding:9px 11px;font-weight:400}
+textarea{resize:vertical;min-height:64px;line-height:1.6}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.btn.danger{color:var(--warn)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px}
+.todo{background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.todo b{color:var(--warn)}
+.ok{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:.9rem}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.q{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.q .fb{font-size:.9rem;color:var(--muted);border-left:3px solid var(--accent);padding-left:10px}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.88rem}
+table.chk{width:100%;border-collapse:collapse;font-size:.92rem}
+table.chk th,table.chk td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:middle}
+table.chk th{color:var(--muted);font-weight:500;font-size:.85rem}
+.tablebox{overflow-x:auto}
+.rate{display:flex;gap:4px}
+.rate button{width:36px;height:32px;border:1px solid var(--line);background:var(--bg);border-radius:8px;cursor:pointer}
+.rate button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.peerbar{background:var(--mark);color:#2b2300;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.prog{display:inline-flex;gap:2px;vertical-align:middle}
+.prog i{width:9px;height:14px;border-radius:2px;background:var(--line)}
+.prog i.on{background:var(--accent)}
+table.chk td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.chk .bad{color:var(--warn);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tile b{display:block;font-family:var(--display);font-size:1.6rem;font-weight:400;line-height:1.2}
+.tile span{font-size:.85rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.92rem;z-index:20;max-width:calc(100% - 32px)}
+.hide{display:none!important}
+ol.plan{margin:0;padding-left:20px;color:var(--muted)}
+.sheet{background:#fff;color:#1d262b;font-family:var(--body);font-size:15px;line-height:1.6;padding:8px}
+.sheet.shot{position:absolute;left:-10000px;top:0;width:794px}
+.sheet .sec{padding:0 0 12px;break-inside:avoid}
+.sheet h1{font-family:var(--body);font-weight:600;font-size:1.2rem;margin:0 0 4px}
+.sheet h2{font-family:var(--body);font-weight:600;font-size:1rem;border-left:5px solid #1c7a54;padding-left:8px;margin:0 0 6px}
+.sheet table{width:100%;border-collapse:collapse;font-size:.9rem}
+.sheet th,.sheet td{border:1px solid #aab7b2;padding:6px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.sheet th{background:#eef4f1;white-space:nowrap}
+.sheet p{margin:0 0 6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.sheet .cap{font-size:.85rem;color:#66757c}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* 활동지 29 추가 */
+.lab{font-size:.9rem;font-weight:500}
+.chip:disabled{cursor:default;opacity:.55}
+.chip.on:disabled{opacity:1}
+.chip.miss{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.q .fb.good{border-left-color:var(--accent);color:var(--ink)}
+.q .fb.bad{border-left-color:var(--warn);color:var(--ink)}
+.rh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.para{font-family:var(--display);font-weight:400;font-size:1.2rem;color:var(--accent)}
+.given{background:var(--bg);border-radius:9px;padding:8px 12px}
+.given small{display:block;color:var(--muted);font-size:.8rem}
+.guide{font-size:.9rem;background:var(--mark);color:#2b2300;border-radius:9px;padding:7px 12px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp>div{border:1px solid var(--line);border-radius:9px;padding:8px 12px;overflow-wrap:anywhere}
+.cmp .ex{border-color:var(--accent);background:var(--accent-soft)}
+.cmp small{color:var(--muted);font-size:.8rem}
+@media (max-width:640px){.cmp{grid-template-columns:1fr}}
+.rate{align-items:center}
+.cloze{font-size:1.05rem;line-height:2.2}
+.bl{display:inline-block;min-width:84px;text-align:center;border-bottom:3px solid var(--muted);padding:0 6px;font-weight:600;color:var(--accent);line-height:1.5}
+.bl.cur{border-color:var(--accent);background:var(--mark);border-radius:6px 6px 0 0}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px}
+.sc{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--bg)}
+.sc.bad{border:2px solid var(--warn)}
+.sc span{font-size:.92rem;font-weight:500}
+.sc .ph{display:flex;gap:4px;flex:none}
+.sc .chip{padding:3px 10px}
+.sheet small{color:#66757c}
+.chip.static{cursor:default}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>읽기 점검 독서실</h1><span>2학년 2학기 4단원 국어 활동지(29) · 읽는 중에도, 읽은 뒤에도</span></div>
+    <div class="who" id="who"></div>
+  </header>
+  <nav class="steps" id="nav" aria-label="활동 단계"></nav>
+  <main id="main"></main>
+</div>
+<input type="file" id="multiPick" multiple accept=".pdf,application/pdf" class="hide">
+<input type="file" id="onePick" accept=".pdf,application/pdf" class="hide">
+<div id="toast" class="toast hide" role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+var MODE="class", SOLO=MODE==="solo", PRE="rd29"+(SOLO?"s":"c")+":", MARK="%RD29DATA:";
+/* ★ 실시간 보기: 선생님 구글 시트의 웹 앱 주소. 비워 두면 실시간 기능만 꺼집니다. */
+var LIVE_URL="https://script.google.com/macros/s/AKfycbwi9Jq0jfukvVHQRlmq-dv4V4OXc3MVrep1PaUgR9tH-KanZxQOk2Z7UztlPHlitVs/exec";
+var ACT="29", ACT_TITLE="활동지(29) 읽기 점검";
+var RATE=[["◎","잘함"],["○","보통"],["△","노력 필요"]];
+var STEPS=[{t:"독자 등록",m:"2분"},{t:"준비 운동",m:"3분"},{t:"말풍선 추적 ①",m:SOLO?"10분 · 시범 보고 따라 하기":"8분 · 혼자 확인"},{t:"말풍선 추적 ②",m:"12분 · 혼자 읽기"},{t:"처방전",m:"3분"},{t:"요약하기",m:"10분"},{t:"전략 카드 분류",m:"5분"},{t:"정리·제출",m:"5분"}];
+var MID=["독서 환경 확인하기","예측하기","예측한 내용 확인하기","질문하기","질문의 답 찾기","단어나 구절의 뜻 찾기","메모하기","추론하기"];
+var JUDGE=["점검","조정"];
+/* 고르는 문항 */
+var C={
+ j1:{q:"책을 읽다가 “방금 읽은 내용이 뭐였지?” 하고 떠올려 보았다.",o:JUDGE,a:0,h:["확인한 걸까요, 해결한 걸까요?","이해했는지 ‘확인’하는 행동입니다."],good:"이해했는지 확인했으니 점검입니다."},
+ j2:{q:"이해가 안 되는 문단을 천천히 다시 읽었다.",o:JUDGE,a:1,h:["확인한 걸까요, 해결한 걸까요?","다시 읽어서 어려움을 ‘해결’하는 행동입니다."],good:"다시 읽어 어려움을 해결했으니 조정입니다."},
+ j3:{q:"글이 눈에 잘 들어오지 않아 “내가 지금 집중하고 있나?” 하고 살펴보았다.",o:JUDGE,a:0,h:["확인한 걸까요, 해결한 걸까요?","자신의 읽기 상태를 ‘확인’하는 행동입니다."],good:"읽기 상태를 확인했으니 점검입니다. 점검이 있어야 조정도 할 수 있습니다."},
+ t0:{o:MID,a:1,h:["제목만 보고 내용을 미리 ‘짐작’했습니다.","‘짐작하다’와 뜻이 비슷한 전략 이름을 찾아보세요."],good:"제목을 보고 내용을 짐작하는 것은 예측하기입니다."},
+ t1:{o:MID,a:0,h:["글의 내용이 아니라 읽는 ‘곳’에 문제가 있었습니다.","주변 환경을 살피는 전략을 찾아보세요."],good:"글의 내용과 직접 관계가 없어도, 읽는 환경을 살피고 바꾸는 것도 읽기 전략입니다."},
+ t3:{o:MID,a:3,h:["연수는 궁금한 점을 떠올렸습니다. 아직 답은 찾지 않았습니다.","궁금한 점을 스스로 묻는 전략입니다."],good:"읽다가 궁금한 점을 스스로 묻는 것이 질문하기입니다."},
+ t4:{o:MID,a:4,h:["3문단에서 떠올린 궁금증이 여기서 풀렸습니다.","질문하기와 짝이 되는 전략입니다."],good:"앞에서 한 질문의 답을 글에서 찾는 것이 질문의 답 찾기입니다."},
+ t5:{o:MID,a:5,h:["‘골머리를 앓아 왔다’라는 구절의 뜻을 몰랐습니다.","연수는 사전을 찾아보기로 했습니다."],good:"뜻을 모르는 낱말이나 구절은 사전에서 찾습니다."},
+ t7:{o:MID,a:6,h:["연수는 이해가 잘되었습니다. 어려움을 푼 것이 아닙니다.","인상적인 표현을 잊지 않으려고 한 행동입니다."],good:"어려움이 없어도, 기억해 두려고 메모하기를 쓸 수 있습니다."},
+ t8:{o:MID,a:7,h:["‘이런’은 앞의 내용을 가리키는 말이라 사전으로는 풀리지 않습니다.","앞부분의 정보를 바탕으로 뜻을 미루어 생각하는 전략입니다."],good:"‘이런, 그런’처럼 가리키는 말은 앞부분을 다시 읽고 추론합니다."},
+ t9:{o:MID,a:6,h:["7문단에서 쓴 전략과 같습니다.","핵심 문장을 잊지 않으려고 한 행동입니다."],good:"핵심을 짚은 문장을 기억해 두려고 메모했습니다."},
+ t10:{o:MID,a:2,h:["새로 예측한 것이 아닙니다. 읽기 전에 한 예측을 다시 꺼냈습니다.","처음 예측이 맞았는지 ‘확인’하는 전략입니다."],good:"읽기 전에 한 예측이 맞았는지 확인하는 전략입니다."},
+ p1:{q:"‘이런, 그런’이 가리키는 것이 어렵다",o:["추론하기","메모하기","예측한 내용 확인하기","단어나 구절의 뜻 찾기"],a:0,h:["8문단에서 연수가 쓴 전략을 떠올려 보세요.","사전으로는 풀리지 않습니다."],good:"추론하기 → 앞부분을 다시 읽는다"},
+ p2:{q:"꼭 기억하고 싶은 문장이 있다",o:["추론하기","메모하기","예측한 내용 확인하기","단어나 구절의 뜻 찾기"],a:1,h:["7문단과 9문단에서 연수가 쓴 전략을 떠올려 보세요.","적어 두는 전략입니다."],good:"메모하기 → 여백에 적어 둔다"},
+ p3:{q:"읽기 전에 한 예측이 맞았는지 궁금하다",o:["추론하기","메모하기","예측한 내용 확인하기","단어나 구절의 뜻 찾기"],a:2,h:["10문단에서 연수가 쓴 전략을 떠올려 보세요.","예측을 다시 꺼내 보는 전략입니다."],good:"예측한 내용 확인하기 → 읽으며 내 예측과 비교한다"},
+ a1:{q:"연수는 요약하다가 기억나지 않는 문단이 있을 때 어떻게 조정했나요? (175쪽)",o:["그 문단을 다시 읽음","그 문단은 빼고 요약함","친구의 요약을 봄"],a:0,h:["175쪽에서 연수가 한 행동을 찾아보세요.","어려움을 스스로 ‘해결’한 행동을 고르세요."],good:"기억나지 않는 문단을 다시 읽는 것이 읽기 후의 조정입니다."},
+ a2:{q:"연수는 더 알고 싶은 우리나라 추상화가를 어떻게 찾아보았나요? (175쪽)",o:["사전에서 찾음","인터넷으로 검색함","글을 처음부터 다시 읽음"],a:1,h:["175쪽에서 연수가 한 행동을 찾아보세요.","글에 없는 내용을 더 알아보는 방법입니다."],good:"글에 없는 내용은 인터넷 검색 등으로 더 찾아봅니다(더 알아보고 싶은 내용 찾아보기)."}
+};
+/* 쓰는 문항 */
+var W={
+ t0:{l:"예측한 내용",min:8,ex:"추상화의 예술적 의미를 알려 주는 내용이 나올 것 같다.",ph:"연수는 제목을 보고 어떤 내용이 나올 것이라고 예측했나요?"},
+ t1:{l:"조정한 방법",min:5,ex:"조용한 곳으로 옮김.",ph:"집중이 안 되자 연수는 어떻게 했나요?"},
+ t3:{l:"조정한 방법",min:6,ex:"다음 문단(4문단)에서 답을 찾아보기로 함.",ph:"궁금증을 풀기 위해 연수는 어떻게 하기로 했나요?"},
+ t4:{l:"조정한 방법 (찾은 답)",min:10,ex:"화가마다 단순화하는 방식이 달라서 다양한 그림이 나온다는 답을 찾음.",ph:"4문단에서 찾은 답을 쓰세요."},
+ t5:{l:"조정한 방법",min:6,ex:"사전에서 ‘골머리를 앓다’의 뜻을 찾음.",ph:"뜻을 알기 위해 연수는 어떻게 했나요?"},
+ t7:{l:"점검한 내용",min:8,ex:"음악과 비교하니 이해가 잘됨. 인상적인 표현이라 기억하고 싶음.",ph:"연수는 7문단을 읽으며 자신의 이해 상태를 어떻게 확인했나요?",note:"이해가 잘된다고 확인하는 것도 점검입니다. 점검 결과 어려움이 없으면 조정할 것도 없습니다."},
+ t8:{l:"조정한 방법",min:10,ex:"앞부분(7문단)을 다시 읽고, ‘그림에 현실을 그대로 옮겨 놓을 수 없다는 생각’을 가리킨다는 것을 파악함.",ph:"‘이런 생각’의 뜻을 알기 위해 연수는 어떻게 했나요?"},
+ t9:{l:"점검한 내용",min:8,ex:"추상화의 핵심을 짚은 문장임을 알아차림. 기억하고 싶음.",ph:"연수는 9문단의 이 문장을 어떻게 보았나요?"},
+ t10:{l:"점검한 내용",min:8,ex:"읽기 전에 한 예측이 맞았는지 확인함. 예측한 대로였음.",ph:"연수는 글을 다 읽고 무엇을 확인했나요?",note:"확인하는 것은 조정이 아니라 점검입니다. 예측이 맞았으므로 조정할 것은 없었습니다."},
+ s1:{l:"처음 · 1문단",min:10,ex:"추상화에 관한 여러 오해가 있음.",ph:"1문단의 중심 내용을 한 문장으로"},
+ s2:{l:"중간 · 2~4문단",min:15,ex:"추상화는 본질이 되는 것만 남기고 나머지는 생략해서 그린 그림임.",ph:"2~4문단의 중심 내용을 한 문장으로"},
+ s3:{l:"중간 · 5~7문단",min:15,ex:"칸딘스키는 그림이 반드시 대상을 묘사할 필요가 없다고 생각해 대상을 그리지 않는 추상화를 시작함.",ph:"5~7문단의 중심 내용을 한 문장으로"},
+ s4:{l:"중간 · 8~9문단",min:15,ex:"추상화는 선과 색이라는 본질만 남겨서 사람들의 마음을 움직이고자 함.",ph:"8~9문단의 중심 내용을 한 문장으로"},
+ s5:{l:"끝 · 10문단",min:10,ex:"추상화는 깊이 생각하고 많이 연구해서 만들어 낸 결과물임.",ph:"10문단의 중심 내용을 한 문장으로"},
+ s6:{l:"주제",min:15,ex:"추상화는 본질만 남겨 표현한 그림이며, 깊은 생각과 연구의 결과물이다.",ph:"위의 중심 내용을 묶어 글 전체의 주제를 한 문장으로"}
+};
+/* 빈칸 문항 */
+var Z={
+ k1:{parts:["1~4문단 핵심: 추상화는 ","이/가 되는 것만 남기고 나머지는 ","해서 그린 그림이다."],ans:["본질","생략"],bank:["본질","생략","색깔","강조"],h:["3문단에서 ‘가장 ○○이 되는 것만 남기고’라는 표현을 찾아보세요.","남기는 것의 반대, 빼 버린다는 뜻의 말입니다."]},
+ k2:{parts:["대부분의 읽기 전략은 ","에 걸쳐 활용할 수 있다. 예) ","은/는 읽기 전과 읽기 중에 모두 쓴다."],ans:["여러 단계","예측하기"],bank:["여러 단계","한 단계","예측하기","요약하기"],h:["방금 분류에서 한 장은 두 칸에 들어갔습니다.","두 칸에 들어간 카드의 이름입니다."]},
+ k3:{parts:["글을 읽는 중에는 잘 읽고 있는지 ","하고, 어려움이 생기면 알맞은 전략으로 ","한다. 이렇게 읽으면 읽기 ","을/를 효과적으로 달성하고, 글을 ","으로 읽게 된다."],ans:["점검","조정","목적","능동적"],bank:["점검","조정","목적","능동적","예측","수동적"],h:["잘 읽고 있는지 ‘확인’하는 것입니다.","어려움을 ‘해결’하는 것입니다.","28차시에서 가장 먼저 정한 것입니다.","스스로 나서서 읽는 태도입니다."]}
+};
+/* 말풍선 추적 표 */
+var ROWS=[
+ {k:"t0",p:"제목",g:"A",check:"제목을 보고 어떤 내용일지 짐작함",guide:"제목 「추상화는 낙서가 아니야」 옆 말풍선을 읽으세요."},
+ {k:"t1",p:"1문단",g:"A",check:"주변이 시끄러워 집중력이 흐트러짐",guide:"1문단 옆 말풍선에서 연수가 무엇을 알아차렸고, 그래서 어떻게 했는지 찾으세요."},
+ {k:"t3",p:"3문단",g:"A",check:"본질만 남기면 모든 추상화가 똑같아지지 않을까 궁금함",guide:"3문단 옆 말풍선에서 연수가 떠올린 궁금증을 찾으세요."},
+ {k:"t4",p:"4문단",g:"A",check:"3문단에서 한 질문의 답이 나오는지 살핌",guide:"4문단에서 3문단 질문의 답이 되는 문장을 찾으세요."},
+ {k:"t5",p:"5문단",g:"B",check:"‘골머리를 앓아 왔다’의 뜻을 모름"},
+ {k:"t7",p:"7문단",g:"B",adj:"어려움이 없어 조정할 것은 없음. 기억하려고 음악(멜로디·리듬)과 그림(선과 색)을 표로 정리해 적어 둠"},
+ {k:"t8",p:"8문단",g:"B",check:"‘이런 생각’의 의미를 이해하기 어려움"},
+ {k:"t9",p:"9문단",g:"B",adj:"어려움이 없어 조정할 것은 없음. 기억하려고 추상화의 뜻을 한 문장으로 적어 둠"},
+ {k:"t10",p:"10문단",g:"B",adj:"예측이 맞아서 조정할 것이 없음"}
+];
+var CARDS=[["읽기 목적 정하기",[1,0,0]],["독서 환경 확인하기",[0,1,0]],["요약하기",[0,0,1]],["예측하기",[1,1,0]],["질문하기",[0,1,0]],["수준에 맞는 글 선정하기",[1,0,0]],["주제 파악하기",[0,0,1]],["메모하기",[0,1,0]],["예측한 내용 확인하기",[0,1,0]],["배경지식 활성화하기",[1,0,0]],["추론하기",[0,1,0]],["읽기 활동 평가하기",[0,0,1]],["질문의 답 찾기",[0,1,0]],["더 알아보고 싶은 내용 찾아보기",[0,0,1]],["단어나 구절의 뜻 찾기",[0,1,0]]];
+var PH=["읽기 전","읽기 중","읽기 후"];
+var ITEMS=[[],["j1","j2","j3"],(SOLO?[]:["t0"]).concat(["t1","t3","t4"]),["t5","t7","t8","t9","t10"],["p1","p2","p3"],["s1","s2","s3","s4","s5","s6"],[],[]];
+
+function fresh(){return {v:1,mode:MODE,user:null,myQ:"",c:{},w:{},z:{},sort:{},sortTry:0,sortFirst:null,sortOk:false,sortBad:[],reflect:"",step:0};}
+var S=fresh(),saved=true,saveFail=false,timer=null,T=null,tIdx=-1,viewState=null,resetArm=false,dl=null,LV=null,liveLast="",liveOk=null;
+var framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function toast(msg){var t=$("#toast");t.textContent=msg;t.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.add("hide");},3200);}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function ukey(u){return PRE+u.ban+"-"+u.num+"-"+u.name;}
+function saveNow(){if(!S.user)return;var ok=lsSet(ukey(S.user),JSON.stringify(S));if(ok)lsSet(PRE+"last",ukey(S.user));saved=ok;saveFail=!ok;renderWho();}
+function touch(){saved=false;clearTimeout(timer);timer=setTimeout(saveNow,600);renderWho();}
+function cs(k){return S.c[k]||(S.c[k]={v:null,first:null,n:0,ok:false});}
+function ws(k){return S.w[k]||(S.w[k]={a:"",open:false,b:"",r:null});}
+function zs(k){return S.z[k]||(S.z[k]={i:0,n:0,off:[]});}
+function len(t){return String(t||"").replace(/\s/g,"").length;}
+
+function missing(i){
+  var m=[];
+  if(i===0){if(!S.user)m.push("반, 번호, 이름 등록");if(!S.myQ.trim())m.push("나의 질문");}
+  var cn=0,wn=0,rn=0;
+  ITEMS[i].forEach(function(k){if(C[k]&&!cs(k).ok)cn++;if(W[k]){var w=ws(k);if(!w.open)wn++;else if(w.r===null)rn++;}});
+  if(i===5){["a1","a2"].forEach(function(k){if(!cs(k).ok)cn++;});}
+  if(cn)m.push("고르는 문항 "+cn+"개");if(wn)m.push("써서 예시 답과 비교할 문항 "+wn+"개");if(rn)m.push("자기 평가 "+rn+"개");
+  if(i===2&&zs("k1").i<2)m.push("1~4문단 핵심 빈칸");
+  if(i===6){if(!S.sortOk)m.push("전략 카드 분류");if(zs("k2").i<2)m.push("핵심 문장 빈칸");}
+  if(i===7){if(zs("k3").i<4)m.push("수업 정리 빈칸");if(len(S.reflect)<30)m.push("느낀 점 2줄 이상");}
+  return m;
+}
+/* ---------- 문항 조각 ---------- */
+function choiceHTML(k,label){
+  var d=C[k],s=cs(k);
+  var chips=d.o.map(function(t,i){var on=s.v===i;return '<button class="chip '+(on?(s.ok?"on":"miss"):"")+'" data-act="ch" data-k="'+k+'" data-v="'+i+'"'+(s.ok?" disabled":"")+' aria-pressed="'+on+'">'+esc(t)+'</button>';}).join("");
+  var fb=s.ok?'<div class="fb good"><b>맞았습니다.</b> '+esc(d.good)+'</div>':s.n?'<div class="fb bad"><b>다시 생각해 보세요.</b> '+esc(d.h[Math.min(s.n-1,d.h.length-1)])+'</div>':'';
+  return (label?'<span class="lab">'+label+'</span>':'')+'<div class="chips">'+chips+'</div>'+fb;
+}
+function rateHTML(k){var r=ws(k).r;return '<div class="rate" role="group" aria-label="자기 평가">'+RATE.map(function(x,i){return '<button type="button" class="'+(r===i?"on":"")+'" title="'+x[1]+'" aria-label="'+x[1]+'" aria-pressed="'+(r===i)+'" data-act="rate" data-k="'+k+'" data-v="'+i+'">'+x[0]+'</button>';}).join("")+'<span class="count">예시 답과 비교한 내 첫 답은?</span></div>';}
+function writeHTML(k){
+  var d=W[k],w=ws(k);
+  if(!w.open)return '<label class="f" for="w-'+k+'"><span>'+d.l+' <small>직접 쓰기 · '+d.min+'자 이상 쓰면 예시 답과 비교할 수 있습니다</small></span><textarea id="w-'+k+'" data-w="'+k+'" rows="2" placeholder="'+esc(d.ph)+'">'+esc(w.a)+'</textarea></label>'+
+    '<div class="btns"><button class="btn sm pri" data-act="open" data-k="'+k+'" id="ob-'+k+'"'+(len(w.a)>=d.min?"":" disabled")+'>예시 답과 비교하기</button><span class="count" id="wc-'+k+'">'+len(w.a)+'자</span><span class="count">비교를 시작하면 첫 답은 고칠 수 없습니다.</span></div>';
+  return '<span class="lab">'+d.l+'</span><div class="cmp"><div><small>내 첫 답 (잠김)</small><p>'+esc(w.a)+'</p></div><div class="ex"><small>예시 답</small><p>'+esc(d.ex)+'</p></div></div>'+
+    (d.note?'<div class="fb good">'+esc(d.note)+'</div>':'')+rateHTML(k)+
+    '<label class="f" for="wb-'+k+'"><span>고쳐 쓰기 <small>예시 답과 비교해 내 말로 고쳐 보세요. 고칠 것이 없으면 그대로 둡니다.</small></span><textarea id="wb-'+k+'" data-wb="'+k+'" rows="2">'+esc(w.b)+'</textarea></label>';
+}
+function clozeHTML(k){
+  var d=Z[k],z=zs(k),done=z.i>=d.ans.length;
+  var sent=d.parts.map(function(p,i){return esc(p)+(i<d.ans.length?'<span class="bl '+(i===z.i?"cur":"")+'">'+(i<z.i?esc(d.ans[i]):"&nbsp;")+'</span>':'');}).join("");
+  var used=d.ans.slice(0,z.i);
+  return '<p class="cloze">'+sent+'</p>'+(done?'<div class="fb good"><b>완성했습니다.</b></div>':'<div class="chips">'+d.bank.map(function(wd){return '<button class="chip" data-act="zb" data-k="'+k+'" data-w="'+esc(wd)+'"'+(used.indexOf(wd)>=0||z.off.indexOf(wd)>=0?" disabled":"")+'>'+esc(wd)+'</button>';}).join("")+'</div>'+(z.off.length?'<div class="fb bad"><b>다시 생각해 보세요.</b> '+esc(d.h[z.i])+'</div>':''));
+}
+function todoBox(i){var m=missing(i);return m.length?'<div class="todo" id="todo"><b>아직 남은 것</b> · '+m.map(esc).join(" · ")+'</div>':'<div class="ok" id="todo">이 단계를 모두 마쳤습니다.</div>';}
+function foot(i){return '<div class="foot">'+(i>0?'<button class="btn" data-act="go" data-i="'+(i-1)+'">← 이전</button>':'<span></span>')+(i<7?'<button class="btn pri" data-act="go" data-i="'+(i+1)+'">다음 단계 →</button>':'<span></span>')+'</div>';}
+function head(i,lead){return '<div class="head"><h2>'+i+'. '+STEPS[i].t+'</h2><span class="meta">'+STEPS[i].m+'</span></div>'+(lead?'<p class="lead">'+lead+'</p>':'');}
+function rowHTML(r){
+  var given=r.check?'<div class="given"><small>점검한 내용</small>'+esc(r.check)+'</div>':'<div class="given"><small>조정한 방법</small>'+esc(r.adj)+'</div>';
+  return '<div class="q"><div class="rh"><b class="para">'+r.p+'</b><span class="count">교과서 170~173쪽 · '+r.p+' 옆 연수의 말풍선을 읽고 오세요</span></div>'+
+    (SOLO&&r.guide?'<div class="guide"><b>생각 길잡이</b> '+esc(r.guide)+'</div>':'')+given+
+    choiceHTML(r.k,"사용한 전략")+writeHTML(r.k)+'</div>';
+}
+/* ---------- 단계 화면 ---------- */
+var V=[];
+V[0]=function(){
+  var u=S.user;
+  var reg=u?'<div class="ok">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+' 독자로 등록되었습니다.</div>'
+   :'<div class="row"><label class="f" for="r-ban"><span>반</span><input type="number" id="r-ban" min="1" max="20" inputmode="numeric"></label><label class="f" for="r-num"><span>번호</span><input type="number" id="r-num" min="1" max="40" inputmode="numeric"></label><label class="f" for="r-name"><span>이름</span><input type="text" id="r-name" autocomplete="off"></label></div><div class="btns"><button class="btn pri" data-act="register">등록하고 시작하기</button><button class="btn" data-act="import">저장한 PDF 불러와 이어 하기</button></div>';
+  return '<div class="stack"><div class="card stack">'+head(0,SOLO?"교과서 170~177쪽을 펴고, 연수가 글을 읽는 과정을 따라가며 혼자 공부합니다. 시범 설명을 먼저 읽고 따라 하면 됩니다.":"선생님과 교과서로 공부한 뒤에 하는 활동입니다. 교과서 170~177쪽을 펴 두고, 연수가 「추상화는 낙서가 아니야」를 읽으며 어떻게 점검하고 조정했는지 제목부터 차례로 혼자 확인합니다.")+
+   '<div class="keyq">수업 핵심 질문 · 글을 읽다가 막히거나 다 읽은 뒤에는 무엇을 해야 할까?</div>'+reg+
+   (u?'<label class="f" for="f-myQ"><span>★ 나의 질문 <small>오늘 수업에서 알고 싶은 것을 질문으로 써 보세요.</small></span><textarea id="f-myQ" data-bind="myQ" rows="2" placeholder="예) 모르는 낱말이 나올 때마다 사전을 찾아야 할까?">'+esc(S.myQ)+'</textarea></label>':'')+'</div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">오늘 할 일</h3><ol class="plan"><li>준비 운동: 점검일까, 조정일까</li><li>말풍선 추적 ①: 제목~4문단 '+(SOLO?"(시범 보고 따라 하기)":"(혼자 확인)")+'</li><li>말풍선 추적 ②: 5~10문단 (혼자 읽기)</li><li>처방전: 어려움에 맞는 전략</li><li>요약하기: 문단별 중심 내용과 주제</li><li>전략 카드 분류: 읽기 전·중·후</li><li>정리·제출: PDF를 클래스룸에 올리기</li></ol>'+
+   '<div class="ok"><b>정답 확인 방법</b> · 고르는 문항은 맞았는지만 알려 줍니다. 쓰는 문항은 먼저 쓴 뒤에 예시 답과 비교하고, 그다음 고쳐 씁니다. 처음 고른 답과 처음 쓴 답은 PDF에 함께 남습니다.</div></div>'+
+   (u?todoBox(0)+foot(0):'')+'<div class="btns" style="justify-content:flex-end"><button class="btn sm" data-act="live">교사용 · 실시간 보기</button><button class="btn sm" data-act="teacher">교사용 · 제출물 모아 보기</button></div></div>';
+};
+V[1]=function(){
+  return '<div class="stack"><div class="card stack">'+head(1,"지난 시간에 배운 점검과 조정을 떠올려 봅니다. 확인하면 점검, 바꾸거나 다시 해서 해결하면 조정입니다.")+
+   ["j1","j2","j3"].map(function(k,i){return '<div class="q"><b>'+(i+1)+'. '+esc(C[k].q)+'</b>'+choiceHTML(k)+'</div>';}).join("")+'</div>'+todoBox(1)+foot(1)+'</div>';
+};
+V[2]=function(){
+  var demo=SOLO?'<div class="card stack"><h3 style="font-size:1.15rem">시범 · 제목에서 연수는 무엇을 했을까</h3><p class="lead">말풍선을 볼 때마다 세 가지를 찾습니다. ① 연수가 무엇을 확인했나(점검) ② 어떤 전략을 썼나 ③ 그래서 어떻게 했나(조정).</p>'+
+    '<div class="tablebox"><table class="chk"><thead><tr><th>문단</th><th>점검한 내용</th><th>사용한 전략</th><th>조정한 방법</th></tr></thead><tbody><tr><td>제목</td><td>제목을 보고 어떤 내용일지 짐작함</td><td><b>예측하기</b></td><td>추상화의 예술적 의미를 알려 주는 내용이 나올 것 같다고 예측함</td></tr></tbody></table></div>'+
+    '<p class="lead">연수는 제목 옆 말풍선에서 글의 내용을 미리 짐작했습니다. 짐작하는 전략의 이름이 예측하기입니다. 이 예측은 10문단에서 다시 확인하게 되니 기억해 두세요. 이제 같은 방법으로 1·3·4문단을 해 봅니다.</p></div>'
+   :'<div class="ok"><b>수업에서 살펴본 내용을 혼자 다시 확인합니다.</b> 기억에만 기대지 말고, 교과서의 말풍선을 다시 읽고 답하세요.</div>';
+  return '<div class="stack">'+demo+'<div class="card stack">'+head(2,"교과서 170~171쪽의 제목부터 4문단까지 읽으며, 연수의 말풍선마다 전략을 고르고 빈칸을 씁니다.")+
+   ROWS.filter(function(r){return r.g==="A"&&!(SOLO&&r.k==="t0");}).map(rowHTML).join("")+
+   '<div class="q"><b>핵심 한 줄</b>'+clozeHTML("k1")+'</div></div>'+todoBox(2)+foot(2)+'</div>';
+};
+V[3]=function(){
+  return '<div class="stack"><div class="card stack">'+head(3,"교과서 171~173쪽의 5~10문단을 혼자 읽으며 연수의 말풍선을 찾아 채웁니다. 6문단에는 말풍선이 없습니다.")+
+   ROWS.filter(function(r){return r.g==="B";}).map(rowHTML).join("")+'</div>'+todoBox(3)+foot(3)+'</div>';
+};
+V[4]=function(){
+  return '<div class="stack"><div class="card stack">'+head(4,"읽다가 막혔을 때 쓰는 처방전입니다. 2~3단계에서 찾은 전략 가운데 알맞은 것을 고르세요.")+
+   '<div class="q"><b>예시 · 뜻을 모르는 낱말이 나왔다</b><div class="fb good">단어나 구절의 뜻 찾기 → 사전을 찾는다</div></div>'+
+   ["p1","p2","p3"].map(function(k){return '<div class="q"><b>'+esc(C[k].q)+'</b>'+choiceHTML(k,"이 전략을 쓴다")+'</div>';}).join("")+'</div>'+todoBox(4)+foot(4)+'</div>';
+};
+V[5]=function(){
+  return '<div class="stack"><div class="card stack">'+head(5,"교과서 170~173쪽 글을 다시 훑어보며 문단 묶음별 중심 내용을 한 문장으로 씁니다. 기억나지 않는 문단은 연수처럼 다시 읽으세요. 그것이 읽기 후의 조정입니다.")+
+   ["s1","s2","s3","s4","s5","s6"].map(function(k){return '<div class="q">'+writeHTML(k)+'</div>';}).join("")+'</div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">연수의 읽기 후 조정 <small style="font-family:var(--body);font-size:.85rem;color:var(--muted)">교과서 174~175쪽</small></h3>'+
+   ["a1","a2"].map(function(k){return '<div class="q"><b>'+esc(C[k].q)+'</b>'+choiceHTML(k)+'</div>';}).join("")+'</div>'+todoBox(5)+foot(5)+'</div>';
+};
+V[6]=function(){
+  var cards=CARDS.map(function(c,i){var st=S.sort[c[0]]||[0,0,0],bad=S.sortBad.indexOf(c[0])>=0;
+    return '<div class="sc '+(bad?"bad":"")+'"><span>'+esc(c[0])+'</span><div class="ph">'+PH.map(function(p,j){return '<button class="chip '+(st[j]?"on":"")+'" data-act="sort" data-i="'+i+'" data-j="'+j+'" aria-pressed="'+!!st[j]+'"'+(S.sortOk?" disabled":"")+'>'+p.slice(3)+'</button>';}).join("")+'</div></div>';}).join("");
+  var fb=S.sortOk?'<div class="fb good"><b>모두 맞았습니다.</b> 예측하기만 읽기 전과 읽기 중, 두 단계에 들어갑니다.</div>':S.sortTry?'<div class="fb bad"><b>'+S.sortBad.length+'장을 다시 살펴보세요.</b> 붉은 테두리 카드입니다.'+(S.sortTry>=2?" 한 장은 두 단계에 모두 들어갑니다.":"")+'</div>':'';
+  return '<div class="stack"><div class="card stack">'+head(6,"교과서 176~177쪽을 참고해 전략 카드 15장을 읽기 전·중·후로 나눕니다. 카드마다 알맞은 단계를 누르세요. 두 단계에 모두 쓰이는 전략은 둘 다 누릅니다.")+
+   '<div class="sgrid">'+cards+'</div>'+fb+(S.sortOk?'':'<div class="btns"><button class="btn pri" data-act="sortcheck">분류 확인하기</button><span class="count">확인 '+S.sortTry+'번</span></div>')+
+   '<div class="q"><b>핵심 문장</b>'+(S.sortOk?clozeHTML("k2"):'<p class="lead">카드 분류를 마치면 열립니다.</p>')+'</div></div>'+todoBox(6)+foot(6)+'</div>';
+};
+V[7]=function(){
+  var all=[];for(var i=0;i<7;i++){var m=missing(i);if(m.length)all.push('<li><b>'+i+'. '+STEPS[i].t+'</b> · '+m.map(esc).join(", ")+'</li>');}
+  return '<div class="stack"><div class="card stack">'+head(7,"오늘 배운 내용을 정리하고 결과를 제출합니다.")+
+   '<div class="q"><b>수업 정리</b>'+clozeHTML("k3")+'</div>'+
+   '<label class="f" for="f-reflect"><span>오늘 활동을 정리하고 느낀 점 <small>2줄 이상 · 새롭게 알게 된 점, 나의 질문에 대한 답</small></span><textarea id="f-reflect" data-bind="reflect" rows="3" placeholder="예) 글을 읽다 막히면 그냥 넘어갔는데, 가리키는 말은 앞부분을 다시 읽으면 된다는 것을 알았다.">'+esc(S.reflect)+'</textarea></label></div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">저장하고 제출하기</h3>'+(all.length?'<div class="todo"><b>아직 남은 것</b><ul style="margin:4px 0 0;padding-left:20px">'+all.join("")+'</ul></div>':'<div class="ok">모든 단계를 마쳤습니다.</div>')+
+   '<p class="lead">결과 PDF를 저장해 클래스룸에 올리세요. 이 PDF가 국어 활동지(29)입니다. 다 하지 못했다면 이 PDF를 첫 화면에서 불러와 이어서 할 수 있습니다.</p>'+
+   '<div class="btns"><button class="btn pri" data-act="pdf">결과 PDF 저장</button><button class="btn" data-act="preview">활동지 미리 보기</button><button class="btn" data-act="import">저장한 PDF 불러오기</button><button class="btn danger" data-act="reset">'+(resetArm?"정말 지울까요? 한 번 더 누르면 지웁니다":"새로 시작")+'</button></div></div>'+todoBox(7)+foot(7)+'</div>';
+};
+/* ---------- 활동지(PDF) ---------- */
+function sec(x){return '<section class="sec">'+x+'</section>';}
+function cAns(k){var d=C[k],s=cs(k);if(s.v===null)return "-";return esc(d.o[s.ok?d.a:s.v])+(s.ok?"":" (미완료)")+(s.n?'<br><small>첫 선택: '+esc(d.o[s.first])+' · 틀린 횟수 '+s.n+'</small>':'');}
+function wAns(k){var w=ws(k);if(!w.a.trim())return "-";var fin=w.open?(w.b.trim()||w.a):w.a;return esc(fin)+(w.open&&w.b.trim()&&w.b.trim()!==w.a.trim()?'<br><small>처음 쓴 답: '+esc(w.a)+'</small>':'')+(w.open?'<br><small>자기 평가: '+(w.r===null?"-":RATE[w.r][0])+'</small>':'<br><small>(예시 답과 비교하지 않음)</small>');}
+function zAns(k){var d=Z[k],z=zs(k);return d.parts.map(function(p,i){return esc(p)+(i<d.ans.length?'<u>&nbsp;'+(i<z.i?esc(d.ans[i]):"&emsp;&emsp;")+'&nbsp;</u>':'');}).join("")+(z.n?' <small>(틀린 횟수 '+z.n+')</small>':'');}
+function sheetHTML(){
+  var u=S.user,d=new Date();
+  var rows=ROWS.map(function(r){
+    if(SOLO_OF(S)&&r.k==="t0")return '<tr><th>제목</th><td>'+esc(r.check)+'</td><td>예측하기 <small>(시범)</small></td><td>추상화의 예술적 의미를 알려 주는 내용이 나올 것 같다고 예측함 <small>(시범)</small></td></tr>';
+    return '<tr><th>'+r.p+'</th><td>'+(r.check?esc(r.check):wAns(r.k))+'</td><td>'+cAns(r.k)+'</td><td>'+(r.check?wAns(r.k):esc(r.adj))+'</td></tr>';}).join("");
+  var cols=[[],[],[]];CARDS.forEach(function(c){var st=S.sort[c[0]]||[0,0,0];st.forEach(function(v,j){if(v)cols[j].push(c[0]);});});
+  return sec('<h1>2학년 2학기 4단원 국어 활동지(29) · 읽는 중에도, 읽은 뒤에도</h1><p class="cap">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+' · '+d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 · 4. 읽고 분석하고 (1) 점검하고 조정하며 읽기'+(SOLO_OF(S)?' · 혼자 하기':'')+'</p>')+
+   sec('<h2>학습 활동 목표</h2><p>1. [수업 핵심 질문] 글을 읽다가 막히거나 다 읽은 뒤에는 무엇을 해야 할까?\n2. (★나의 질문) '+esc(S.myQ)+'</p>')+
+   sec('<h2>준비 운동: 점검일까, 조정일까</h2><table>'+["j1","j2","j3"].map(function(k){return '<tr><td>'+esc(C[k].q)+'</td><td style="width:32%">'+cAns(k)+'</td></tr>';}).join("")+'</table>')+
+   sec('<h2>활동 1 · 읽기 중 — 연수의 말풍선 추적 (170~173쪽)</h2><table><tr><th>문단</th><th>점검한 내용</th><th>사용한 전략</th><th>조정한 방법</th></tr>'+rows+'</table><p style="margin-top:6px">→ '+zAns("k1")+'</p>')+
+   sec('<h2>개념 정리 · 읽기 중 ‘막힘’ 처방전</h2><table><tr><th>이럴 때 (어려움)</th><th>이 전략을 쓴다</th></tr><tr><td>(예시) 뜻을 모르는 낱말이 나왔다</td><td>단어나 구절의 뜻 찾기</td></tr>'+["p1","p2","p3"].map(function(k){return '<tr><td>'+esc(C[k].q)+'</td><td>'+cAns(k)+'</td></tr>';}).join("")+'</table>')+
+   sec('<h2>활동 2 · 읽기 후 — 연수처럼 요약하고 조정하기 (174~175쪽)</h2><table><tr><th>짜임 · 문단</th><th>중심 내용</th></tr>'+["s1","s2","s3","s4","s5","s6"].map(function(k){return '<tr><th>'+W[k].l+'</th><td>'+wAns(k)+'</td></tr>';}).join("")+'</table><table style="margin-top:6px">'+["a1","a2"].map(function(k){return '<tr><td>'+esc(C[k].q)+'</td><td style="width:32%">'+cAns(k)+'</td></tr>';}).join("")+'</table>')+
+   sec('<h2>활동 3 · 전략 카드 분류하기 (176~177쪽)</h2><table><tr>'+PH.map(function(p){return '<th>'+p+'</th>';}).join("")+'</tr><tr>'+cols.map(function(c){return '<td>'+(c.map(esc).join("<br>")||"-")+'</td>';}).join("")+'</tr></table><p class="cap">'+(S.sortOk?"분류 완료":"분류 미완료")+' · 확인 '+S.sortTry+'번'+(S.sortFirst!==null?' · 첫 확인 때 맞은 카드 '+S.sortFirst+'/15':'')+'</p><p>→ '+zAns("k2")+'</p>')+
+   sec('<h2>수업 정리</h2><p>'+zAns("k3")+'</p>')+
+   sec('<h2>오늘 활동을 정리하고 느낀 점</h2><p>'+esc(S.reflect)+'</p>');
+}
+function SOLO_OF(st){return st.mode==="solo";}
+function withState(st,fn){var o=S;S=st;try{return fn();}finally{S=o;}}
+function info(st){return withState(st,function(){
+  var done=[];for(var i=0;i<8;i++)done.push(missing(i).length===0);
+  var ck=Object.keys(C).filter(function(k){return !(SOLO_OF(st)&&k==="t0");}),wk=Object.keys(W).filter(function(k){return !(SOLO_OF(st)&&k==="t0");});
+  var first=ck.filter(function(k){var s=st.c[k];return s&&s.ok&&s.n===0;}).length,miss=ck.reduce(function(a,k){return a+((st.c[k]||{}).n||0);},0)+Object.keys(Z).reduce(function(a,k){return a+((st.z[k]||{}).n||0);},0);
+  var rated=wk.map(function(k){var w=st.w[k];return w&&w.r!==null&&w.r!==undefined?RATE[w.r][0]:"·";}).join("");
+  var rev=wk.filter(function(k){var w=st.w[k];return w&&w.open&&w.b.trim()&&w.b.trim()!==w.a.trim();}).length;
+  var avg=wk.length?Math.round(wk.reduce(function(a,k){return a+len((st.w[k]||{}).a);},0)/wk.length):0;
+  return {done:done,n:done.filter(Boolean).length,first:first,ctot:ck.length,miss:miss,rated:rated,rev:rev,wtot:wk.length,avg:avg};});}
+function teacherView(){
+  var L=T.list,I=L.map(info);
+  var rows=L.map(function(s,i){var x=I[i],u=s.user;return '<tr><td class="num">'+esc(u.ban)+'-'+esc(u.num)+'</td><td>'+esc(u.name)+'</td><td>'+(SOLO_OF(s)?"혼자":"수업")+'</td><td><span class="prog">'+x.done.map(function(d){return '<i class="'+(d?"on":"")+'"></i>';}).join("")+'</span> '+x.n+'/8</td><td class="num">'+x.first+'/'+x.ctot+'</td><td class="num'+(x.miss>=12?" bad":"")+'">'+x.miss+'</td><td>'+x.rated+'</td><td class="num">'+x.rev+'/'+x.wtot+'</td><td class="num'+(x.avg<8?" bad":"")+'">'+x.avg+'</td><td><button class="btn sm" data-act="tview" data-i="'+i+'">활동지 보기</button></td></tr>';}).join("");
+  var fin=I.filter(function(x){return x.n===8;}).length;
+  return '<div class="stack"><div class="card stack"><div class="head"><h2>교사용 · 제출물 모아 보기</h2><span class="meta">불러온 내용은 이 화면에만 있고 저장되지 않습니다</span></div><p class="lead">학생들이 클래스룸에 제출한 PDF를 내려받아 한꺼번에 선택하세요. 수업용과 혼자 하기용 PDF를 함께 넣어도 됩니다.</p>'+
+   '<div class="btns"><button class="btn pri" data-act="tpick">PDF 여러 개 불러오기</button>'+(L.length?'<button class="btn" data-act="tcsv">표를 CSV로 저장</button><button class="btn" data-act="tclear">모두 비우기</button>':'')+'<button class="btn" data-act="tclose">닫기</button></div>'+(T.bad.length?'<div class="todo"><b>기록을 읽지 못한 파일 '+T.bad.length+'개</b> · '+T.bad.map(esc).join(", ")+'</div>':'')+'</div>'+
+   (L.length?'<div class="card stack"><div class="tiles"><div class="tile"><b>'+L.length+'명</b><span>제출</span></div><div class="tile"><b>'+fin+'명</b><span>모든 단계 완료</span></div><div class="tile"><b>'+(I.reduce(function(a,x){return a+x.first/x.ctot;},0)/L.length*100).toFixed(0)+'%</b><span>고르는 문항 첫 시도 정답률</span></div><div class="tile"><b>'+I.filter(function(x){return x.avg<8;}).length+'명</b><span>첫 답이 매우 짧음</span></div></div>'+
+    '<div class="tablebox"><table class="chk"><thead><tr><th>반-번호</th><th>이름</th><th>모드</th><th>진행</th><th>첫 시도 정답</th><th>틀린 횟수</th><th>자기 평가</th><th>고쳐 쓴 문항</th><th>첫 답 평균 글자</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="count">진행 칸은 0~7단계 순서 · 자기 평가는 쓰는 문항 순서(◎ 잘함 ○ 보통 △ 노력 필요) · 틀린 횟수가 많거나 첫 답이 매우 짧으면 붉게 표시</p></div>':'<div class="card"><p class="lead">아직 불러온 제출물이 없습니다.</p></div>')+'</div>';
+}
+function viewerView(){
+  var st=viewState,inT=!!T&&tIdx>=0,inL=!!LV&&st!==S,u=st.user;
+  return '<div class="stack"><div class="peerbar"><b>'+(inT?"2학년 "+esc(u.ban)+"반 "+esc(u.num)+"번 "+esc(u.name):inL?"지금 하는 중 · 2학년 "+esc(u.ban)+"반 "+esc(u.num)+"번 "+esc(u.name):"활동지 미리 보기")+'</b><div class="btns">'+(inT?'<button class="btn" data-act="tnav" data-d="-1"'+(tIdx<=0?" disabled":"")+'>← 이전 학생</button><button class="btn" data-act="tnav" data-d="1"'+(tIdx>=T.list.length-1?" disabled":"")+'>다음 학생 →</button>':'')+'<button class="btn" data-act="viewoff">'+(inT||inL?"목록으로":"닫기")+'</button></div></div><div class="card"><div class="sheet">'+withState(st,sheetHTML)+'</div></div></div>';
+}
+/* ---------- 그리기 ---------- */
+function renderWho(){var u=S.user,w=$("#who");if(!u){w.innerHTML='<span>등록 전</span>';return;}
+  w.innerHTML='<span>2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+'</span><span><i class="dot '+(saveFail?"off":"")+'"></i>'+(saveFail?"이 기기에 저장하지 못함 · PDF로 저장하세요":saved?"자동 저장됨":"저장 중")+'</span>'+(LIVE_URL&&liveOk!==null?'<span><i class="dot '+(liveOk?"":"off")+'"></i>'+(liveOk?"선생님 화면에 공유 중":"선생님 화면에 연결 안 됨")+'</span>':'');}
+function renderNav(){
+  $("#nav").innerHTML=STEPS.map(function(s,i){var done=S.user&&missing(i).length===0;
+    return (!SOLO?'':i===2?'<span class="lesson">시범</span>':i===3?'<span class="lesson">혼자</span>':'')+'<button class="stepbtn '+(S.step===i?"cur ":"")+(done?"done":"")+'" data-act="go" data-i="'+i+'"'+(!S.user&&i>0?" disabled":"")+(S.step===i?' aria-current="step"':"")+'><span class="n">'+(done?"✓":i)+'</span>'+s.t+'</button>';}).join("");
+}
+function render(keep){
+  var y=window.scrollY;
+  $("#nav").classList.toggle("hide",!!(viewState||T||LV));
+  $("#main").innerHTML=viewState?viewerView():LV?liveView():T?teacherView():V[S.step]();
+  renderWho();renderNav();window.scrollTo(0,keep?y:0);
+}
+function refreshTodo(){var t=$("#todo");if(t){var tmp=document.createElement("div");tmp.innerHTML=todoBox(S.step);t.replaceWith(tmp.firstChild);}renderNav();}
+/* ---------- 파일 ---------- */
+function saveFile(name,data){
+  var blob=data instanceof Blob?data:new Blob([data]);
+  if(dl){return dl.save({filename:name,data:blob}).then(function(){toast("저장했습니다: "+name);}).catch(function(e){toast(e&&e.code==="declined"?"저장을 취소했습니다.":"저장하지 못했습니다. 선생님께 알려 주세요.");});}
+  try{var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},4000);toast("내려받기를 시작했습니다: "+name);}catch(e){toast("이 화면에서는 파일 저장이 되지 않습니다.");}
+  return Promise.resolve();
+}
+function htmlText(html){
+  var t=String(html).replace(/<br\s*\/?>/gi," / ").replace(/<\/t[dh]>/gi," | ").replace(/<\/tr>/gi,"\n").replace(/<h2[^>]*>/gi,"\n■ ").replace(/<\/(h1|h2|p|section)>/gi,"\n").replace(/<[^>]+>/g,"");
+  var ta=document.createElement("textarea");ta.innerHTML=t;
+  return ta.value.replace(/[ \t]+\|\s*\n/g,"\n").replace(/\n{3,}/g,"\n\n").trim();
+}
+function reportText(){
+  var ex=Object.keys(W).filter(function(k){return !(SOLO&&k==="t0");}).map(function(k){var r=ROWS.filter(function(x){return x.k===k;})[0];return "  "+(r?r.p+" ":"")+W[k].l+": "+W[k].ex;}).join("\n");
+  return htmlText(sheetHTML())+"\n\n■ (교사용) 쓰는 문항 예시 답\n"+ex;
+}
+function metaOf(){var x=info(S);return {act:ACT,title:ACT_TITLE,done:x.n+"/8",first:x.first+"/"+x.ctot,miss:x.miss,avg:x.avg};}
+function packState(){var o=JSON.parse(JSON.stringify(S));try{o.__text=reportText();o.__meta=metaOf();}catch(e){}var b=new TextEncoder().encode(JSON.stringify(o)),s="";for(var i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(s);}
+function unpackPDF(buf){var t=new TextDecoder("latin1").decode(buf),k=t.lastIndexOf(MARK);if(k<0)return null;var e=t.indexOf("\n",k),s=atob(t.slice(k+MARK.length,e<0?t.length:e).trim()),b=new Uint8Array(s.length);for(var i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder("utf-8").decode(b);}
+function valid(d){return d&&d.v===1&&d.user&&d.c&&d.w;}
+function makePDF(){
+  if(typeof html2canvas!=="function"||!window.jspdf){toast("PDF 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로 고침 하세요.");return;}
+  var u=S.user,name="국어활동지29_2학년"+u.ban+"반"+u.num+"번_"+u.name+(SOLO?"_혼자하기":"")+".pdf";
+  var box=document.createElement("div");box.className="sheet shot";box.innerHTML=sheetHTML();document.body.appendChild(box);
+  toast("PDF를 만드는 중입니다. 잠시 기다려 주세요.");
+  var Wd=box.offsetWidth,kids=[].map.call(box.children,function(k){return [k.offsetTop,k.offsetTop+k.offsetHeight];});
+  html2canvas(box,{scale:2,backgroundColor:"#ffffff"}).then(function(c){
+    var k=c.width/Wd,pageH=Math.floor(c.width*277/190),H=c.height,y=0,cuts=[0],edges=[];
+    kids.forEach(function(b){edges.push(Math.round(b[0]*k),Math.round(b[1]*k));});
+    while(H-y>pageH){var lim=y+pageH,cut=0;edges.forEach(function(e){if(e>y&&e<=lim&&e>cut)cut=e;});if(cut-y<pageH*0.3)cut=lim;y=cut;cuts.push(y);}
+    cuts.push(H);
+    var pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4"}),first=true;
+    for(var i=0;i<cuts.length-1;i++){var h=cuts[i+1]-cuts[i];if(h<=0)continue;var pc=document.createElement("canvas");pc.width=c.width;pc.height=h;var g=pc.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,pc.width,h);g.drawImage(c,0,cuts[i],c.width,h,0,0,c.width,h);if(!first)pdf.addPage();first=false;pdf.addImage(pc.toDataURL("image/jpeg",0.9),"JPEG",10,10,190,h*190/c.width);}
+    box.remove();saveFile(name,new Blob([pdf.output("blob"),"\n"+MARK+packState()+"\n"],{type:"application/pdf"}));
+  }).catch(function(){box.remove();toast("PDF를 만들지 못했습니다. 선생님께 알려 주세요.");});
+}
+function tAdd(st){var k=st.mode+ukey(st.user),n=info(st).n;for(var i=0;i<T.list.length;i++){if(T.list[i].mode+ukey(T.list[i].user)===k){if(n>=info(T.list[i]).n)T.list[i]=st;return;}}T.list.push(st);}
+function tLoad(files){var i=0;(function next(){
+  if(i>=files.length){T.list.sort(function(a,b){return (+a.user.ban-+b.user.ban)||(+a.user.num-+b.user.num);});render();toast("제출물 "+T.list.length+"건을 불러왔습니다.");return;}
+  var f=files[i++],fr=new FileReader();
+  fr.onload=function(){try{var d=JSON.parse(unpackPDF(fr.result));if(!valid(d))throw 0;tAdd(Object.assign(fresh(),d));}catch(e){T.bad.push(f.name);}next();};
+  fr.onerror=function(){T.bad.push(f.name);next();};fr.readAsArrayBuffer(f);})();}
+/* ---------- 실시간 보기 ---------- */
+function liveKey(u){return ACT+":"+u.ban+"-"+u.num+"-"+u.name;}
+function liveSend(beacon){
+  if(!LIVE_URL||framed||!S.user||T||LV||viewState)return;
+  var p;try{var x=info(S),d=JSON.parse(JSON.stringify(S));
+    p=JSON.stringify({action:"save",key:liveKey(S.user),ban:S.user.ban,num:S.user.num,name:S.user.name,step:S.step,done:x.done.map(function(v){return v?"1":"0";}).join(""),chars:Object.keys(S.w).reduce(function(a,k){return a+len(S.w[k].a);},0),mats:x.first,noSrc:x.miss,data:JSON.stringify(d)});}catch(e){return;}
+  if(p===liveLast)return;liveLast=p;
+  if(beacon===true){try{navigator.sendBeacon(LIVE_URL,new Blob([p],{type:"text/plain;charset=utf-8"}));}catch(e){}return;}
+  fetch(LIVE_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:p}).then(function(){if(liveOk!==true){liveOk=true;renderWho();}}).catch(function(){liveLast="";if(liveOk!==false){liveOk=false;renderWho();}});
+}
+function liveGet(q){return fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+q+"&act="+ACT+"&key="+encodeURIComponent(LV.key)+"&t="+Date.now()).then(function(r){return r.json();});}
+function livePoll(){
+  if(!LV||!LV.key)return;
+  liveGet("action=list").then(function(d){
+    if(!LV)return;
+    if(d&&d.ok){LV.err="";LV.rows=d.rows||[];LV.now=d.now;LV.at=new Date();}
+    else if(d&&d.error==="key"){LV.err="비밀번호가 다릅니다.";LV.key="";LV.rows=[];}
+    else LV.err="목록을 읽지 못했습니다.";
+    if(!viewState)render(true);
+  }).catch(function(){if(!LV)return;LV.err="연결하지 못했습니다. 웹에 올린 주소로 열었는지 확인하세요.";if(!viewState)render(true);});
+}
+function ago(ms){var s=Math.max(0,Math.round(ms/1000));return s<60?s+"초 전":Math.floor(s/60)+"분 전";}
+function liveView(){
+  var top='<div class="head"><h2>교사용 · 실시간 보기</h2><span class="meta">'+(LV.at?"마지막 갱신 "+LV.at.toLocaleTimeString("ko-KR")+" · 10초마다 새로 읽음":"")+'</span></div>';
+  if(!LIVE_URL||framed)return '<div class="stack"><div class="card stack">'+top+'<div class="todo">실시간 보기는 웹에 올린 주소에서만 쓸 수 있습니다.</div><div class="btns"><button class="btn" data-act="lclose">닫기</button></div></div></div>';
+  if(!LV.key)return '<div class="stack"><div class="card stack">'+top+(LV.err?'<div class="todo">'+esc(LV.err)+'</div>':'')+'<label class="f" for="lv-key"><span>교사 비밀번호</span><input type="text" id="lv-key" autocomplete="off"></label><div class="btns"><button class="btn pri" data-act="lstart">보기 시작</button><button class="btn" data-act="lclose">닫기</button></div></div></div>';
+  var all=LV.rows.slice().sort(function(a,b){return (+a.ban-+b.ban)||(+a.num-+b.num);}),bans=[];
+  all.forEach(function(r){if(bans.indexOf(r.ban)<0)bans.push(r.ban);});
+  var L=LV.filter?all.filter(function(r){return r.ban===LV.filter;}):all,now=LV.now||Date.now(),per=STEPS.map(function(){return 0;});
+  L.forEach(function(r){if(per[r.step]!=null)per[r.step]++;});
+  var idle=L.filter(function(r){return now-r.updated>180000;}).length;
+  var rows=L.map(function(r){var q=now-r.updated,st=now-r.stepSince,dn=String(r.done||"");
+    return '<tr><td class="num">'+esc(r.ban)+'-'+esc(r.num)+'</td><td>'+esc(r.name)+'</td><td>'+r.step+'. '+esc((STEPS[r.step]||{}).t||"")+(st>600000?' <span class="bad">'+Math.floor(st/60000)+'분째</span>':'')+'</td><td><span class="prog">'+STEPS.map(function(_,i){return '<i class="'+(dn.charAt(i)==="1"?"on":"")+'"></i>';}).join("")+'</span></td><td class="num">'+r.mats+'</td><td class="num'+(r.noSrc>=12?" bad":"")+'">'+r.noSrc+'</td><td class="num">'+r.chars+'</td><td class="'+(q>180000?"bad":"")+'">'+ago(q)+'</td><td><button class="btn sm" data-act="lview" data-id="'+esc(r.key)+'">보기</button></td></tr>';}).join("");
+  return '<div class="stack"><div class="card stack">'+top+(LV.err?'<div class="todo">'+esc(LV.err)+'</div>':'')+
+    '<div class="btns">'+(bans.length>1?'<label for="lv-ban" style="font-size:.9rem">반</label><select id="lv-ban" style="width:auto"><option value="">전체</option>'+bans.map(function(b){return '<option value="'+esc(b)+'"'+(LV.filter===b?" selected":"")+'>'+esc(b)+'반</option>';}).join("")+'</select>':'')+'<button class="btn" data-act="lrefresh">지금 새로 읽기</button><button class="btn danger" data-act="lclear">'+(LV.arm?"정말 지울까요? 한 번 더 누르면 이 활동지의 실시간 기록을 지웁니다":"이 활동지 실시간 기록 지우기")+'</button><button class="btn" data-act="lclose">닫기</button></div>'+
+    '<div class="tiles"><div class="tile"><b>'+L.length+'명</b><span>참여</span></div><div class="tile"><b>'+idle+'명</b><span>3분 넘게 입력 없음</span></div><div class="tile"><b>'+L.filter(function(r){return r.noSrc>=12;}).length+'명</b><span>많이 틀리는 중</span></div></div>'+
+    '<div class="chips">'+STEPS.map(function(s,i){return '<span class="chip static'+(per[i]?" on":"")+'">'+i+'. '+s.t+' '+per[i]+'명</span>';}).join("")+'</div></div>'+
+    '<div class="card stack">'+(L.length?'<div class="tablebox"><table class="chk"><thead><tr><th>반-번호</th><th>이름</th><th>지금 단계</th><th>진행</th><th>첫 시도 정답</th><th>틀린 횟수</th><th>쓴 글자 수</th><th>마지막 입력</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="count">진행 칸은 0~7단계 순서 · 한 단계에 10분 넘게 머물면 머문 시간이 표시됩니다</p>':'<p class="lead">아직 들어온 학생이 없습니다. 학생이 등록하고 입력을 시작하면 20초 안에 나타납니다.</p>')+'</div></div>';
+}
+function csvCell(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
+/* ---------- 동작 ---------- */
+var A={
+  go:function(d){if(!S.user)return;S.step=+d.i;resetArm=false;touch();render();setTimeout(liveSend,1500);},
+  register:function(){var ban=$("#r-ban").value.trim(),num=$("#r-num").value.trim(),name=$("#r-name").value.trim();if(!ban||!num||!name){toast("반, 번호, 이름을 모두 적어 주세요.");return;}
+    var u={ban:ban,num:num,name:name},old=lsGet(ukey(u));if(old){try{S=Object.assign(fresh(),JSON.parse(old));toast("이전 기록을 이어서 엽니다.");}catch(e){S=fresh();S.user=u;}}else{S=fresh();S.user=u;}saveNow();render();},
+  ch:function(d){var s=cs(d.k),v=+d.v;if(s.ok)return;if(s.first===null)s.first=v;s.v=v;if(v===C[d.k].a)s.ok=true;else s.n++;touch();render(true);},
+  open:function(d){var w=ws(d.k);if(len(w.a)<W[d.k].min)return;w.open=true;w.b=w.a;touch();render(true);},
+  rate:function(d){ws(d.k).r=+d.v;touch();render(true);},
+  zb:function(d){var z=zs(d.k),D=Z[d.k];if(d.w===D.ans[z.i]){z.i++;z.off=[];}else{z.n++;z.off.push(d.w);}touch();render(true);},
+  sort:function(d){if(S.sortOk)return;var c=CARDS[+d.i][0],st=S.sort[c]||(S.sort[c]=[0,0,0]);st[+d.j]=st[+d.j]?0:1;var k=S.sortBad.indexOf(c);if(k>=0)S.sortBad.splice(k,1);touch();render(true);},
+  sortcheck:function(){var bad=CARDS.filter(function(c){var st=S.sort[c[0]]||[0,0,0];return st.join()!==c[1].join();}).map(function(c){return c[0];});
+    S.sortTry++;if(S.sortFirst===null)S.sortFirst=15-bad.length;S.sortBad=bad;S.sortOk=!bad.length;touch();render(true);},
+  pdf:function(){makePDF();},
+  preview:function(){viewState=S;render();},
+  viewoff:function(){viewState=null;tIdx=-1;render();if(LV)livePoll();},
+  import:function(){var f=$("#onePick");f.value="";f.click();},
+  teacher:function(){T={list:[],bad:[]};render();},
+  live:function(){LV={key:"",rows:[],err:"",filter:"",arm:false,timer:setInterval(livePoll,10000)};render();},
+  lstart:function(){var k=$("#lv-key").value.trim();if(!k){toast("비밀번호를 적어 주세요.");return;}LV.key=k;LV.err="";render();livePoll();},
+  lrefresh:function(){livePoll();},
+  lclose:function(){clearInterval(LV.timer);LV=null;viewState=null;render();},
+  lview:function(d){liveGet("action=get&id="+encodeURIComponent(d.id)).then(function(r){if(!r||!r.ok)throw 0;viewState=Object.assign(fresh(),JSON.parse(r.data));render();}).catch(function(){toast("이 학생의 기록을 읽지 못했습니다.");});},
+  lclear:function(){if(!LV.arm){LV.arm=true;render(true);return;}LV.arm=false;liveGet("action=clear").then(function(){LV.rows=[];render(true);toast("실시간 기록을 지웠습니다.");}).catch(function(){toast("지우지 못했습니다.");});},
+  tclose:function(){T=null;tIdx=-1;render();},
+  tclear:function(){T={list:[],bad:[]};render();},
+  tpick:function(){var f=$("#multiPick");f.value="";f.click();},
+  tview:function(d){tIdx=+d.i;viewState=T.list[tIdx];render();},
+  tnav:function(d){var n=tIdx+(+d.d);if(n<0||n>=T.list.length)return;tIdx=n;viewState=T.list[n];render();},
+  tcsv:function(){var wk=Object.keys(W),rows=[["반","번호","이름","모드","완료 단계 수(8)","고르는 문항 첫 시도 정답","고르는 문항 수","틀린 횟수","고쳐 쓴 문항","첫 답 평균 글자 수","카드 분류 확인 횟수","나의 질문","느낀 점"].concat(wk.map(function(k){return W[k].l+" (처음)";}),wk.map(function(k){return W[k].l+" (고친 답)";}),wk.map(function(k){return W[k].l+" (자기 평가)";}))];
+    T.list.forEach(function(s){var x=info(s),u=s.user,g=function(k){return s.w[k]||{};};rows.push([u.ban,u.num,u.name,SOLO_OF(s)?"혼자 하기":"수업",x.n,x.first,x.ctot,x.miss,x.rev,x.avg,s.sortTry,s.myQ,s.reflect].concat(wk.map(function(k){return g(k).a||"";}),wk.map(function(k){return g(k).open?g(k).b:"";}),wk.map(function(k){var r=g(k).r;return r===null||r===undefined?"":RATE[r][1];})));});
+    saveFile("국어활동지29_제출물_요약.csv","﻿"+rows.map(function(r){return r.map(csvCell).join(",");}).join("\r\n"));},
+  reset:function(){if(!resetArm){resetArm=true;render(true);return;}try{localStorage.removeItem(ukey(S.user));localStorage.removeItem(PRE+"last");}catch(e){}S=fresh();resetArm=false;saved=true;render();}
+};
+document.addEventListener("click",function(e){var el=e.target.closest("[data-act]");if(!el||el.disabled)return;var f=A[el.dataset.act];if(f)f(el.dataset,el);});
+document.addEventListener("input",function(e){var el=e.target,d=el.dataset||{};
+  if(d.bind){S[d.bind]=el.value;touch();refreshTodo();}
+  else if(d.w){var w=ws(d.w);if(w.open)return;w.a=el.value;touch();var n=len(w.a);$("#wc-"+d.w).textContent=n+"자";$("#ob-"+d.w).disabled=n<W[d.w].min;}
+  else if(d.wb){ws(d.wb).b=el.value;touch();}});
+document.addEventListener("paste",function(e){var d=e.target.dataset||{};if(d.w||d.wb){e.preventDefault();toast("붙여 넣기는 할 수 없습니다. 직접 써 주세요.");}});
+document.addEventListener("change",function(e){var el=e.target;
+  if(el.id==="multiPick"&&el.files.length&&T)tLoad([].slice.call(el.files));
+  if(el.id==="onePick"&&el.files[0]){var fr=new FileReader();fr.onload=function(){var d=null;try{d=JSON.parse(unpackPDF(fr.result));}catch(x){}
+    if(valid(d)){S=Object.assign(fresh(),d);S.mode=MODE;saveNow();render();toast(d.user.name+" 독자의 기록을 불러왔습니다. 이어서 하세요.");}else toast("이 활동지에서 저장한 PDF가 아닙니다.");};fr.readAsArrayBuffer(el.files[0]);}});
+window.addEventListener("beforeunload",function(){if(!saved)saveNow();liveSend(true);});
+document.addEventListener("change",function(e){if(e.target.id==="lv-ban"&&LV){LV.filter=e.target.value;render(true);}});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="lv-key"){e.preventDefault();A.lstart();}});
+setInterval(liveSend,20000);setTimeout(liveSend,3000);
+(function(){var k=lsGet(PRE+"last"),d=k&&lsGet(k);if(d){try{S=Object.assign(fresh(),JSON.parse(d));}catch(e){S=fresh();}}})();
+render();
+if(window.claude&&typeof window.claude.use==="function"){window.claude.use("downloads").then(function(x){dl=x||null;}).catch(function(){});}
+})();
+</script>
+</body>
+</html>
