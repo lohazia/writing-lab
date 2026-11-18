@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매체 자료 분석실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 배치: 위쪽 단계 띠 + 한 단계씩 넘기는 작업 책상 */
+  --bg:#f1f5f2; --surface:#ffffff; --ink:#1b2a31; --muted:#586b73; --line:#d3ddd9;
+  --accent:#1c7a54; --accent-ink:#ffffff; --accent-soft:#def1e6; --mark:#ffe27a;
+  --warn:#b8402a; --warn-soft:#fbe7e1;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11181b; --surface:#1a2428; --ink:#e5eeea; --muted:#9db1ad; --line:#2e3c41;
+    --accent:#5fc798; --accent-ink:#0d1a14; --accent-soft:#1c392c; --mark:#7a6412;
+    --warn:#f09079; --warn-soft:#3a211b; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11181b; --surface:#1a2428; --ink:#e5eeea; --muted:#9db1ad; --line:#2e3c41;
+  --accent:#5fc798; --accent-ink:#0d1a14; --accent-soft:#1c392c; --mark:#7a6412;
+  --warn:#f09079; --warn-soft:#3a211b; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65}
+button,input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.25;text-wrap:balance;margin:0}
+p{margin:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 64px}
+header.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:16px 0 10px}
+.brand{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.brand h1{font-size:1.7rem}
+.brand span{color:var(--muted);font-size:.9rem}
+.who{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}
+.dot.off{background:var(--warn)}
+nav.steps{display:flex;gap:6px;overflow-x:auto;padding:6px 0 12px;align-items:center}
+.lesson{flex:none;font-family:var(--display);font-size:.95rem;color:var(--muted);padding:0 4px 0 8px}
+.lesson:first-child{padding-left:0}
+.stepbtn{flex:none;display:flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.9rem;white-space:nowrap}
+.stepbtn .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--bg);font-size:.75rem;font-variant-numeric:tabular-nums}
+.stepbtn.done .n{background:var(--accent);color:var(--accent-ink)}
+.stepbtn.cur{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.stepbtn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1 1 220px;min-width:0}
+.head{display:flex;gap:10px 16px;justify-content:space-between;align-items:flex-end;flex-wrap:wrap}
+.head h2{font-size:1.5rem}
+.head .meta{color:var(--muted);font-size:.88rem}
+.lead{color:var(--muted);max-width:65ch}
+.keyq{background:var(--mark);color:#2b2300;border-radius:10px;padding:10px 14px;font-weight:500}
+:root[data-theme="dark"] .keyq{color:#fff3c2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .keyq{color:#fff3c2}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.9rem;font-weight:500}
+label.f small{font-weight:400;color:var(--muted)}
+input[type=text],input[type=number],input[type=url],textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--bg);padding:9px 11px;font-weight:400}
+textarea{resize:vertical;min-height:64px;line-height:1.6}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.btn.danger{color:var(--warn)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px}
+.todo{background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.todo b{color:var(--warn)}
+.ok{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:.9rem}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.q{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.q .fb{font-size:.9rem;color:var(--muted);border-left:3px solid var(--accent);padding-left:10px}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.88rem}
+table.chk{width:100%;border-collapse:collapse;font-size:.92rem}
+table.chk th,table.chk td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:middle}
+table.chk th{color:var(--muted);font-weight:500;font-size:.85rem}
+.tablebox{overflow-x:auto}
+.rate{display:flex;gap:4px}
+.rate button{width:36px;height:32px;border:1px solid var(--line);background:var(--bg);border-radius:8px;cursor:pointer}
+.rate button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.peerbar{background:var(--mark);color:#2b2300;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.prog{display:inline-flex;gap:2px;vertical-align:middle}
+.prog i{width:9px;height:14px;border-radius:2px;background:var(--line)}
+.prog i.on{background:var(--accent)}
+table.chk td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.chk .bad{color:var(--warn);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tile b{display:block;font-family:var(--display);font-size:1.6rem;font-weight:400;line-height:1.2}
+.tile span{font-size:.85rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.92rem;z-index:20;max-width:calc(100% - 32px)}
+.hide{display:none!important}
+ol.plan{margin:0;padding-left:20px;color:var(--muted)}
+.sheet{background:#fff;color:#1d262b;font-family:var(--body);font-size:15px;line-height:1.6;padding:8px}
+.sheet.shot{position:absolute;left:-10000px;top:0;width:794px}
+.sheet .sec{padding:0 0 12px;break-inside:avoid}
+.sheet h1{font-family:var(--body);font-weight:600;font-size:1.2rem;margin:0 0 4px}
+.sheet h2{font-family:var(--body);font-weight:600;font-size:1rem;border-left:5px solid #1c7a54;padding-left:8px;margin:0 0 6px}
+.sheet table{width:100%;border-collapse:collapse;font-size:.9rem}
+.sheet th,.sheet td{border:1px solid #aab7b2;padding:6px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.sheet th{background:#eef4f1;white-space:nowrap}
+.sheet p{margin:0 0 6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.sheet .cap{font-size:.85rem;color:#66757c}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+
+/* 활동지 32 추가 */
+.lab{font-size:.9rem;font-weight:500}
+.chip:disabled{cursor:default;opacity:.55}
+.chip.on:disabled{opacity:1}
+.chip.miss{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.q .fb.good{border-left-color:var(--accent);color:var(--ink)}
+.q .fb.bad{border-left-color:var(--warn);color:var(--ink)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp>div{border:1px solid var(--line);border-radius:9px;padding:8px 12px;overflow-wrap:anywhere}
+.cmp .ex{border-color:var(--accent);background:var(--accent-soft)}
+.cmp small{color:var(--muted);font-size:.8rem}
+@media (max-width:640px){.cmp{grid-template-columns:1fr}}
+.rate{align-items:center}
+.cloze{font-size:1.05rem;line-height:2.2}
+.bl{display:inline-block;min-width:84px;text-align:center;border-bottom:3px solid var(--muted);padding:0 6px;font-weight:600;color:var(--accent);line-height:1.5}
+.bl.cur{border-color:var(--accent);background:var(--mark);border-radius:6px 6px 0 0}
+.sheet small{color:#66757c}
+.chip.static{cursor:default}
+.split{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (min-width:1000px){.wrap.wide{max-width:1400px}.split{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}.tbp{position:sticky;top:10px;max-height:calc(100vh - 20px)}}
+.tbp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.tbp .bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tbp .bar b{font-family:var(--display);font-weight:400;font-size:1.1rem;margin-right:4px}
+.tbp .view{overflow:auto;border-radius:8px;background:#fff;min-height:200px;flex:1 1 auto}
+.tbp .view img{display:block;width:100%;height:auto}
+.tbp .view.zoom img{width:170%;max-width:none}
+.tbp .ph{padding:28px 18px;color:#46565c;text-align:center;line-height:1.7}
+.tbp.closed .view,.tbp.closed .note{display:none}
+@media (max-width:999px){.tbp .view{max-height:55vh}}
+.tbp .note{font-size:.8rem;color:var(--muted)}
+.frame{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.post{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.post h3{font-size:1.1rem}
+.scene{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:9px;padding:6px 8px;background:var(--surface)}
+.scene.in{border-style:solid;border-color:var(--accent)}
+.scene.out{opacity:.75;text-decoration:line-through;text-decoration-color:var(--muted)}
+.scene.bad{border:2px solid var(--warn);text-decoration:none;opacity:1}
+.scene span{font-size:.92rem}
+.scene .ph2{display:flex;gap:4px;flex:none}
+.scene .chip{padding:3px 9px;font-size:.82rem}
+.jig{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.jig button{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;cursor:pointer}
+.jig button.on{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.jig button b{font-family:var(--display);font-weight:400;font-size:1.3rem;margin-right:6px;color:var(--accent)}
+.mine{border-left:4px solid var(--accent);padding-left:10px}
+.care{font-size:.88rem;background:var(--warn-soft);border-radius:9px;padding:7px 12px}
+.oxrow{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <header class="top">
+    <div class="brand"><h1>매체 자료 분석실</h1><span>2학년 2학기 4단원 국어 활동지(32) · 사진 밖, 광고 속에 감춰진 것</span></div>
+    <div class="who" id="who"></div>
+  </header>
+  <nav class="steps" id="nav" aria-label="활동 단계"></nav>
+  <main id="main"></main>
+</div>
+<input type="file" id="multiPick" multiple accept=".pdf,application/pdf" class="hide">
+<input type="file" id="onePick" accept=".pdf,application/pdf" class="hide">
+<div id="toast" class="toast hide" role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+var MODE="class", PRE="rm32c:", MARK="%RM32DATA:";
+/* ★ 실시간 보기: 선생님 구글 시트의 웹 앱 주소. 비워 두면 실시간 기능만 꺼집니다. */
+var LIVE_URL="https://script.google.com/macros/s/AKfycbwi9Jq0jfukvVHQRlmq-dv4V4OXc3MVrep1PaUgR9tH-KanZxQOk2Z7UztlPHlitVs/exec";
+var ACT="32", ACT_TITLE="활동지(32) 현실을 재현하는 매체 자료";
+/* ★ 교과서 쪽 이미지: 선생님 학교 드라이브(학교 계정만 열람)에 올린 파일 ID. 이 공개 페이지에는 교과서 이미지가 들어 있지 않습니다. */
+var TB={"188":"15hscS6-1CYXMmPyaVWVC2joSY0ZB_E8P","189":"1BiTGLN769xYxS2yo8Crq6TcBg2UYbMPk","190":"1TTVN_XV6cQFHCSEb3qS2PnqumXRNvagg","191":"1QL7Ba1pjVlOpx-Ybtpe9Mcq2GZpMK7KT","194":"1gzbBtOccyYJ2zN3SiI2BFN56hzjp6G4V","195":"1DyltwbpRiOZqYIY1Eqfgjt70-zDIyjya","196":"1LiYjmulaqw3zNNS3RpmEJPhkVnb9wak4","197":"1bTJnZIOxFzuEgGH8EYNxdrSbUpUy8BOw","198":"18s3oYJwHEz5qdB_1BpgHxOnFuwUTN-YB","199":"1avLAy86k4QQZWyScHShKlRd_3FyoNcSv"};
+var RATE=[["◎","잘함"],["○","보통"],["△","노력 필요"]];
+var STEPS=[{t:"분석가 등록",m:"2분"},{t:"같은 하루, 다른 게시물",m:"8분 · 188~191쪽"},{t:"개념 정리",m:"4분 · 189·191쪽"},{t:"광고·홍보물 분석",m:"8분 · 직소 · 194~199쪽"},{t:"모둠에서 나누기",m:"12분"},{t:"정리·제출",m:"10분"}];
+var LAST=STEPS.length-1;
+var PURP=["상품을 팔려고 (상업 광고)","어떤 행동을 하도록 설득하려고 (공익 광고)","정보나 사실을 널리 알리려고 (홍보물)"];
+var HAS=["있음","없음"];
+/* 고르는 문항 */
+var C={
+ c1:{q:"관점이 담긴 매체 자료는 거짓일까?",o:["거짓이다","거짓이 아니어도 현실의 일부만 골라 보여 준다"],a:1,h:["포니, 채은, 지훈의 게시물에 거짓이 있었나요?","세 게시물 모두 사실이지만, 같은 현실의 다른 조각을 골랐습니다."],good:"거짓은 아니지만, 제작자가 고른 현실의 일부입니다. 그래서 무엇이 빠졌는지도 생각하며 봅니다."},
+ c2:{q:"배제는 언제나 제작자가 일부러 하는 것일까? (191쪽 날개)",o:["언제나 일부러 한다","선택받지 못한 장면이 자연스럽게 배제되기도 한다"],a:1,h:["191쪽 오른쪽 ‘매체 자료의 선택과 배제’를 읽어 보세요.","‘자연스럽게’라는 말을 찾아보세요."],good:"의도하지 않았어도 빠지는 장면이 있습니다. 그래서 고정 관념이 담기지 않았는지도 비판적으로 살펴야 합니다."},
+ pA:{o:PURP,a:1,h:["이 광고는 무엇을 팔고 있나요? 아니면 무엇을 하자고 하나요?","‘펫티켓 지켜야죠!’는 시청자에게 행동을 권하는 말입니다."],good:"펫티켓을 지키도록 설득하는 공익 광고입니다."},
+ pB:{o:PURP,a:2,h:["홍보물의 첫 문구는 무엇을 알리고 있나요?","‘한 달에 한 번 채식 급식을 실시합니다’라는 사실을 알립니다."],good:"채식 급식 실시를 알리는 홍보물입니다. 채식 급식에 관한 인식도 바꾸려 합니다."},
+ pC:{o:PURP,a:0,h:["‘○○ 가구로 완성하세요’는 무엇을 사라는 말일까요?","199쪽 생각 콕: 상품을 판매하는 데 목적이 있습니다."],good:"가구를 팔려는 상업 광고입니다."},
+ pD:{o:PURP,a:2,h:["공모전의 응모 기간, 방법 등을 알리고 있습니다.","199쪽 생각 콕: 정보나 사실을 널리 알리는 목적입니다."],good:"공모전 참여를 알리는 홍보물입니다."},
+ sA:{o:HAS,a:1,h:["특정 집단(성별, 나이, 가족 형태 등)을 하나의 모습으로 묶어 그리고 있나요?","반려견에 대한 느낌이 사람마다 다르다는 것을 보여 줄 뿐입니다."],good:"없습니다. 반려견에 대한 느낌이 사람마다 다르다는 점을 보여 줍니다."},
+ sB:{o:HAS,a:1,h:["‘채식은 영양이 부족하고 맛도 없다?’라는 문구에 물음표가 있습니다.","제작자는 그 통념을 반박하려고 꺼냈습니다."],good:"없습니다. 오히려 ‘채식은 맛없다’는 통념을 반박하는 자료입니다."},
+ sC:{o:HAS,a:0,h:["여자아이 방과 남자아이 방의 색과 소품을 비교해 보세요.","아이의 취향을 무엇에 따라 나누었나요?"],good:"있습니다. 아이의 취향을 성별에 따라 나누어 표현했습니다."},
+ sD:{o:HAS,a:0,h:["사진 속 가족은 누구로 이루어져 있나요?","세상에는 다양한 형태의 가족이 있습니다."],good:"있습니다. 가족을 엄마·아빠와 자녀로만 표현했습니다."},
+ ox1:{q:"1. 점검·조정하며 읽으면 능동적으로 읽을 수 있다.",o:["○","×"],a:0,h:["29차시 수업을 떠올려 보세요.","점검하고 조정하는 독자는 스스로 나서서 읽습니다."],good:"맞습니다."},
+ ox2:{q:"2. 읽기 전 전략은 읽기 중에 쓰면 안 된다.",o:["○","×"],a:1,h:["전략 카드 분류에서 두 칸에 들어간 카드를 떠올려 보세요.","예측하기는 읽기 전과 읽기 중에 모두 씁니다."],good:"대부분의 읽기 전략은 여러 단계에 걸쳐 씁니다."},
+ ox3:{q:"3. 매체 자료는 제작자의 의도와 관점이 반영된 재현물이다.",o:["○","×"],a:0,h:["오늘 개념 정리를 다시 보세요.",""],good:"맞습니다."},
+ ox4:{q:"4. 광고와 홍보물에는 고정 관념이 반영될 수 없다.",o:["○","×"],a:1,h:["C 가구 광고, D 가족사진 공모전을 떠올려 보세요.",""],good:"반영될 수 있습니다. 그래서 비판적으로 읽어야 합니다."}
+};
+/* 쓰는 문항 */
+var W={
+ tpo:{l:"포니가 드러내려는 생각",min:6,ex:"부지런하고 멋진 나",ph:"포니는 친구들에게 자신을 어떻게 보이고 싶었을까요?"},
+ tce:{l:"채은이 드러내려는 생각",min:6,ex:"친구들의 멋진 공연이 축제의 주인공이다.",ph:"채은이는 축제에서 무엇을 중요하게 보았을까요?"},
+ tjh:{l:"지훈이 드러내려는 생각",min:6,ex:"축제가 잘 끝난 것은 방송반의 숨은 노력 덕분이다.",ph:"지훈이는 축제에서 무엇을 중요하게 보았을까요?"},
+ why:{l:"세 게시물 모두 거짓은 없다. 그런데 왜 서로 다른 하루, 다른 축제처럼 보일까?",min:15,ex:"게시물을 올린 사람이 자기 의도와 관점에 따라 보여 줄 장면을 선택하고 나머지 장면은 배제했기 때문이다.",ph:"선택, 배제, 의도, 관점 가운데 두 낱말 이상을 넣어 써 보세요."},
+ wA:{l:"어떤 문구를 골랐나?",min:6,ex:"주인에겐 순해도 타인에겐 사나울 수 있습니다. / 펫티켓 지켜야죠!",ph:"광고에 나온 문구를 찾아 쓰세요."},
+ iA:{l:"어떤 이미지를 골랐나?",min:8,ex:"호랑이로 표현된 소형견, 무서워하는 아이와 엄마, 목줄을 채우는 모습",ph:"눈에 띄는 장면이나 그림을 쓰세요."},
+ xA:{l:"무엇이 빠졌나?",min:6,ex:"주인 눈에 보이는 작고 순한 강아지의 모습",ph:"광고에서 덜 보여 주거나 빼 버린 것은?"},
+ vA:{l:"의도와 관점은?",min:10,ex:"반려견에 대한 느낌은 사람마다 다르니, 모두를 위해 펫티켓을 지키자고 설득하려 한다.",ph:"제작자는 무엇을 말하고 싶었을까요?"},
+ eA:{l:"효과적인가? 그 까닭은?",min:12,ex:"소형견을 호랑이로 보여 주어 다른 사람이 느끼는 두려움을 실감 나게 해서 효과적이다. (지나친 과장이라는 의견도 가능)",ph:"효과적이다 / 효과적이지 않다 + 왜냐하면"},
+ wB:{l:"어떤 문구를 골랐나?",min:6,ex:"채식 급식으로 육류 소비를 줄이면 온실가스 배출도 줄어들어요. / 영양 균형을 맞춘 채식 식단과 다양한 조리법 개발로 영양과 맛을 모두 잡았습니다.",ph:"홍보물에 나온 문구를 찾아 쓰세요."},
+ iB:{l:"어떤 이미지를 골랐나?",min:8,ex:"온실가스를 밀어내는 지구, 채식 식단으로 구성된 식판",ph:"눈에 띄는 그림을 쓰세요."},
+ xB:{l:"무엇이 빠졌나?",min:6,ex:"채식 급식의 불편한 점, 반대하는 의견",ph:"홍보물에서 보여 주지 않은 것은?"},
+ vB:{l:"의도와 관점은?",min:10,ex:"채식 급식 실시를 알리고, 채식 급식을 부정적으로 생각하는 사람들의 인식을 바꾸려 한다. 채식 급식에 긍정적이다.",ph:"제작자는 무엇을 알리고 어떤 생각을 바꾸고 싶었을까요?"},
+ eB:{l:"효과적인가? 그 까닭은?",min:12,ex:"채식 급식의 장점과 오해를 풀어 주는 내용을 함께 보여 주어 효과적이다.",ph:"효과적이다 / 효과적이지 않다 + 왜냐하면"},
+ wC:{l:"어떤 문구를 골랐나?",min:4,ex:"아이가 좋아하는 방 / ○○ 가구로 완성하세요.",ph:"광고에 나온 문구를 찾아 쓰세요."},
+ iC:{l:"어떤 이미지를 골랐나?",min:8,ex:"분홍색과 인형으로 꾸민 여자아이 방, 파란색과 로봇·자동차로 꾸민 남자아이 방",ph:"두 방의 색과 소품을 비교해 쓰세요."},
+ xC:{l:"무엇이 빠졌나?",min:6,ex:"다른 색이나 다른 놀이를 좋아하는 아이들",ph:"이 광고에서 보이지 않는 아이들은?"},
+ vC:{l:"의도와 관점은?",min:10,ex:"가구를 팔려 한다. 아이의 취향을 성별에 따라 나누어 보고 있다.",ph:"제작자는 아이들의 취향을 어떻게 보고 있나요?"},
+ eC:{l:"효과적인가? 그 까닭은?",min:12,ex:"눈에 잘 띄지만, 성별에 따른 고정 관념을 강화할 수 있어 바람직하지 않다.",ph:"효과적이다 / 효과적이지 않다 + 왜냐하면"},
+ wD:{l:"어떤 문구를 골랐나?",min:6,ex:"가족사진 공모전 / 가족과 함께하는 순간을 담아요.",ph:"홍보물에 나온 문구를 찾아 쓰세요."},
+ iD:{l:"어떤 이미지를 골랐나?",min:8,ex:"엄마, 아빠, 아들, 딸 4인으로 구성된 가족사진",ph:"사진 속 가족은 누구로 이루어져 있나요?"},
+ xD:{l:"무엇이 빠졌나?",min:6,ex:"한부모 가족, 조손 가족, 1인 가구 등 다양한 형태의 가족",ph:"이 홍보물에서 보이지 않는 가족은?"},
+ vD:{l:"의도와 관점은?",min:10,ex:"공모전 참여를 알리려 한다. 가족을 부모와 자녀로 이루어진 모습으로 보고 있다.",ph:"제작자는 ‘가족’을 어떻게 보고 있나요?"},
+ eD:{l:"효과적인가? 그 까닭은?",min:12,ex:"공모전 정보는 잘 알리지만, 다양한 형태의 가족은 참여를 망설일 수 있어 아쉽다.",ph:"효과적이다 / 효과적이지 않다 + 왜냐하면"},
+ gA:{l:"A 펫티켓 광고 · 의도와 관점 한 줄",min:8,ex:"반려견에 대한 느낌은 사람마다 다르니 펫티켓을 지키자.",ph:"모둠 친구의 발표를 듣고 한 줄로"},
+ gB:{l:"B 채식 급식 · 의도와 관점 한 줄",min:8,ex:"채식 급식은 환경에 좋고 영양과 맛도 갖췄다.",ph:"모둠 친구의 발표를 듣고 한 줄로"},
+ gC:{l:"C 가구 광고 · 의도와 관점 한 줄",min:8,ex:"여자아이는 분홍·인형, 남자아이는 파랑·로봇을 좋아한다.",ph:"모둠 친구의 발표를 듣고 한 줄로"},
+ gD:{l:"D 가족사진 공모전 · 의도와 관점 한 줄",min:8,ex:"가족은 엄마·아빠와 아이들로 이루어진다.",ph:"모둠 친구의 발표를 듣고 한 줄로"},
+ expo:{l:"C와 D의 고정 관념에 계속 노출되면 사람들의 생각은 어떻게 될까?",min:15,ex:"여자아이는 분홍을 좋아하고, 가족은 부모와 자녀로 이루어진다는 생각을 당연하게 여기게 된다. 그 모습에 맞지 않는 사람은 소외감을 느낄 수 있다.",ph:"199쪽 (4)와 이어집니다. 사람들의 인식에 어떤 영향을 줄까요?"}
+};
+/* 빈칸 문항 */
+var Z={
+ k1:{parts:["재현: 현실에 존재하는 대상이나 일어나는 현상을 ","을/를 통해 나타내는 것. 매체 자료는 제작자의 ","와/과 ","에 따라 어떤 장면은 ","하고 어떤 장면은 ","한 재현물이다."],ans:["매체","의도","관점","선택","배제"],bank:["매체","의도","관점","선택","배제","사실","고정 관념"],h:["189쪽 아래 ‘재현’의 뜻풀이를 보세요.","제작자가 이루려는 목적입니다.","제작자가 대상을 바라보는 입장입니다.","보여 줄 장면을 고르는 것입니다.","보여 주지 않고 빼는 것입니다."]},
+ k2:{parts:["네 자료의 공통점: 제작자는 의도에 맞는 문구와 이미지를 ","하고, 나머지는 ","한다."],ans:["선택","배제"],bank:["선택","배제","강조","재현"],h:["보여 줄 것을 고르는 것입니다.","보여 주지 않고 빼는 것입니다."]},
+ k3:{parts:["매체 자료를 볼 때에는 문구와 이미지가 드러내는 의도와 관점을 파악하고, 특정 집단에 관한 ","이/가 반영되어 있지 않은지 비판적으로 읽는다."],ans:["고정 관념"],bank:["고정 관념","재현","배경지식","사실"],h:["C와 D에서 찾은 것입니다."]}
+};
+/* 활동 1 장면 고르기 */
+var POSTS=[
+ {id:"po",n:"포니의 일요일",pg:"188~189쪽",t:"tpo",sc:[["등산하는 모습",1],["공부하는 모습",0],["늦잠 자는 모습",0]]},
+ {id:"ce",n:"채은의 축제 게시물",pg:"190~191쪽",t:"tce",sc:[["무대에서 공연하는 친구들",1],["공연을 촬영하는 방송반 친구들",0],["무대 밖의 관객",0]]},
+ {id:"jh",n:"지훈의 축제 게시물",pg:"190~191쪽",t:"tjh",sc:[["공연을 촬영하는 방송반 친구들",1],["무대 위의 공연자",0]]}
+];
+var NSC=POSTS.reduce(function(a,p){return a+p.sc.length;},0);
+var MAT={
+ A:{n:"펫티켓 광고",pg:[194,195],pgt:"194~195쪽",d:"한국방송광고진흥공사, 「우리 개는 순한데」"},
+ B:{n:"채식 급식 홍보물",pg:[196,197],pgt:"196~197쪽",d:"학교 채식 급식 홍보물"},
+ C:{n:"가구 광고",pg:[198,199],pgt:"198~199쪽 가",d:"○○ 가구 광고"},
+ D:{n:"가족사진 공모전",pg:[198,199],pgt:"198~199쪽 나",d:"△△시 가족사진 공모전 홍보물"}
+};
+var ML=["A","B","C","D"];
+function matKeys(m){return {p:"p"+m,s:"s"+m,w:["w","i","x","v","e"].map(function(x){return x+m;})};}
+
+function fresh(){return {v:1,mode:MODE,user:null,myQ:"",c:{},w:{},z:{},sc:{},scTry:0,scFirst:null,scOk:false,scBad:[],jig:"",q3:"",reflect:"",step:0};}
+var S=fresh(),saved=true,saveFail=false,timer=null,T=null,tIdx=-1,viewState=null,resetArm=false,dl=null,LV=null,liveLast="",liveOk=null,TBV={pg:0,zoom:false,open:true,err:{}};
+var framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function toast(msg){var t=$("#toast");t.textContent=msg;t.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.add("hide");},3200);}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function ukey(u){return PRE+u.ban+"-"+u.num+"-"+u.name;}
+function saveNow(){if(!S.user)return;var ok=lsSet(ukey(S.user),JSON.stringify(S));if(ok)lsSet(PRE+"last",ukey(S.user));saved=ok;saveFail=!ok;renderWho();}
+function touch(){saved=false;clearTimeout(timer);timer=setTimeout(saveNow,600);renderWho();}
+function cs(k){return S.c[k]||(S.c[k]={v:null,first:null,n:0,ok:false});}
+function ws(k){return S.w[k]||(S.w[k]={a:"",open:false,b:"",r:null});}
+function zs(k){return S.z[k]||(S.z[k]={i:0,n:0,off:[]});}
+function len(t){return String(t||"").replace(/\s/g,"").length;}
+function others(){return ML.filter(function(m){return m!==S.jig;});}
+/* 단계별 문항 (상태에 따라 달라짐) */
+function itemsOf(i){
+  if(i===1)return POSTS.map(function(p){return p.t;}).concat(["why"]);
+  if(i===2)return ["c1","c2"];
+  if(i===3){if(!S.jig)return [];var k=matKeys(S.jig);return [k.p].concat(k.w,[k.s]);}
+  if(i===4){if(!S.jig)return ["expo"];return others().reduce(function(a,m){return a.concat(["g"+m,"s"+m]);},[]).concat(["expo"]);}
+  if(i===5)return ["ox1","ox2","ox3","ox4"];
+  return [];
+}
+function missing(i){
+  var m=[];
+  if(i===0){if(!S.user)m.push("반, 번호, 이름 등록");if(!S.myQ.trim())m.push("나의 질문");}
+  var cn=0,wn=0,rn=0;
+  itemsOf(i).forEach(function(k){if(C[k]&&!cs(k).ok)cn++;if(W[k]){var w=ws(k);if(!w.open)wn++;else if(w.r===null)rn++;}});
+  if(i===1&&!S.scOk)m.push("장면 고르기");
+  if(i===3&&!S.jig)m.push("내가 맡은 자료 고르기");
+  if(i===4&&!S.jig)m.push("3단계에서 맡은 자료 고르기");
+  if(cn)m.push("고르는 문항 "+cn+"개");if(wn)m.push("써서 예시 답과 비교할 문항 "+wn+"개");if(rn)m.push("자기 평가 "+rn+"개");
+  if(i===2&&zs("k1").i<5)m.push("개념 빈칸");
+  if(i===4&&zs("k2").i<2)m.push("공통점 빈칸");
+  if(i===5){if(zs("k3").i<1)m.push("수업 정리 빈칸");if(!S.q3.trim())m.push("나의 질문 ③");if(len(S.reflect)<30)m.push("느낀 점 2줄 이상");}
+  return m;
+}
+/* ---------- 문항 조각 ---------- */
+function choiceHTML(k,label){
+  var d=C[k],s=cs(k);
+  var chips=d.o.map(function(t,i){var on=s.v===i;return '<button class="chip '+(on?(s.ok?"on":"miss"):"")+'" data-act="ch" data-k="'+k+'" data-v="'+i+'"'+(s.ok?" disabled":"")+' aria-pressed="'+on+'">'+esc(t)+'</button>';}).join("");
+  var hint=d.h[Math.min(s.n-1,d.h.length-1)]||d.h[0];
+  var fb=s.ok?'<div class="fb good"><b>맞았습니다.</b> '+esc(d.good)+'</div>':s.n?'<div class="fb bad"><b>다시 생각해 보세요.</b> '+esc(hint)+'</div>':'';
+  return (label?'<span class="lab">'+label+'</span>':'')+'<div class="chips">'+chips+'</div>'+fb;
+}
+function rateHTML(k){var r=ws(k).r;return '<div class="rate" role="group" aria-label="자기 평가">'+RATE.map(function(x,i){return '<button type="button" class="'+(r===i?"on":"")+'" title="'+x[1]+'" aria-label="'+x[1]+'" aria-pressed="'+(r===i)+'" data-act="rate" data-k="'+k+'" data-v="'+i+'">'+x[0]+'</button>';}).join("")+'<span class="count">예시 답과 비교한 내 첫 답은?</span></div>';}
+function writeHTML(k,lab){
+  var d=W[k],w=ws(k),L=lab||d.l;
+  if(!w.open)return '<label class="f" for="w-'+k+'"><span>'+esc(L)+' <small>직접 쓰기 · '+d.min+'자 이상 쓰면 예시 답과 비교할 수 있습니다</small></span><textarea id="w-'+k+'" data-w="'+k+'" rows="2" placeholder="'+esc(d.ph)+'">'+esc(w.a)+'</textarea></label>'+
+    '<div class="btns"><button class="btn sm pri" data-act="open" data-k="'+k+'" id="ob-'+k+'"'+(len(w.a)>=d.min?"":" disabled")+'>예시 답과 비교하기</button><span class="count" id="wc-'+k+'">'+len(w.a)+'자</span><span class="count">비교를 시작하면 첫 답은 고칠 수 없습니다.</span></div>';
+  return '<span class="lab">'+esc(L)+'</span><div class="cmp"><div><small>내 첫 답 (잠김)</small><p>'+esc(w.a)+'</p></div><div class="ex"><small>예시 답</small><p>'+esc(d.ex)+'</p></div></div>'+
+    rateHTML(k)+
+    '<label class="f" for="wb-'+k+'"><span>고쳐 쓰기 <small>예시 답과 비교해 내 말로 고쳐 보세요. 고칠 것이 없으면 그대로 둡니다.</small></span><textarea id="wb-'+k+'" data-wb="'+k+'" rows="2">'+esc(w.b)+'</textarea></label>';
+}
+function clozeHTML(k){
+  var d=Z[k],z=zs(k),done=z.i>=d.ans.length;
+  var sent=d.parts.map(function(p,i){return esc(p)+(i<d.ans.length?'<span class="bl '+(i===z.i?"cur":"")+'">'+(i<z.i?esc(d.ans[i]):"&nbsp;")+'</span>':'');}).join("");
+  var used=d.ans.slice(0,z.i);
+  return '<p class="cloze">'+sent+'</p>'+(done?'<div class="fb good"><b>완성했습니다.</b></div>':'<div class="chips">'+d.bank.map(function(wd){return '<button class="chip" data-act="zb" data-k="'+k+'" data-w="'+esc(wd)+'"'+(used.indexOf(wd)>=0||z.off.indexOf(wd)>=0?" disabled":"")+'>'+esc(wd)+'</button>';}).join("")+'</div>'+(z.off.length?'<div class="fb bad"><b>다시 생각해 보세요.</b> '+esc(d.h[z.i])+'</div>':''));
+}
+function todoBox(i){var m=missing(i);return m.length?'<div class="todo" id="todo"><b>아직 남은 것</b> · '+m.map(esc).join(" · ")+'</div>':'<div class="ok" id="todo">이 단계를 모두 마쳤습니다.</div>';}
+function foot(i){return '<div class="foot">'+(i>0?'<button class="btn" data-act="go" data-i="'+(i-1)+'">← 이전</button>':'<span></span>')+(i<LAST?'<button class="btn pri" data-act="go" data-i="'+(i+1)+'">다음 단계 →</button>':'<span></span>')+'</div>';}
+function head(i,lead){return '<div class="head"><h2>'+i+'. '+STEPS[i].t+'</h2><span class="meta">'+STEPS[i].m+'</span></div>'+(lead?'<p class="lead">'+lead+'</p>':'');}
+/* ---------- 교과서 보기 ---------- */
+function tbPages(i){if(i===1)return [188,189,190,191];if(i===2)return [189,191];if(i===3)return S.jig?MAT[S.jig].pg:[194,195,196,197,198,199];if(i===4)return [194,195,196,197,198,199];return [];}
+function tbPanel(i){
+  var P=tbPages(i);if(!P.length)return "";
+  var cur=P.indexOf(TBV.pg)>=0?TBV.pg:P[0];TBV.pg=cur;
+  var id=TB[cur],img;
+  if(!id||TBV.err[cur])img='<div class="ph"><b>교과서 '+cur+'쪽</b>을 펴서 보세요.'+(id?'<br>이 화면에서 그림을 불러오지 못했습니다. 학교 계정으로 로그인했는지 확인하거나 <a href="https://drive.google.com/file/d/'+id+'/view" target="_blank" rel="noopener">새 탭에서 '+cur+'쪽 열기</a>를 누르세요.':'')+'</div>';
+  else img='<img src="https://lh3.googleusercontent.com/d/'+encodeURIComponent(id)+'=w1600" alt="교과서 '+cur+'쪽" data-pg="'+cur+'" referrerpolicy="no-referrer">';
+  return '<aside class="tbp'+(TBV.open?"":" closed")+'" aria-label="교과서"><div class="bar"><b>교과서</b>'+P.map(function(p){return '<button class="chip '+(p===cur?"on":"")+'" data-act="tbpg" data-p="'+p+'">'+p+'쪽</button>';}).join("")+
+    '<span style="flex:1"></span>'+(TBV.open?'<button class="btn sm" data-act="tbzoom">'+(TBV.zoom?"화면에 맞추기":"크게 보기")+'</button>':'')+'<button class="btn sm" data-act="tbtog">'+(TBV.open?"접기":"교과서 펼치기")+'</button></div>'+
+    '<div class="view'+(TBV.zoom?" zoom":"")+'">'+img+'</div><p class="note">수업용 교과서 자료입니다. 학교 계정으로만 열리며, 복사하거나 다른 곳에 올리지 않습니다.</p></aside>';
+}
+function withTB(i,inner){var p=tbPanel(i);return p?'<div class="split">'+p+'<div>'+inner+'</div></div>':inner;}
+/* ---------- 단계 화면 ---------- */
+var V=[];
+V[0]=function(){
+  var u=S.user;
+  var reg=u?'<div class="ok">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+' 분석가로 등록되었습니다.</div>'
+   :'<div class="row"><label class="f" for="r-ban"><span>반</span><input type="number" id="r-ban" min="1" max="20" inputmode="numeric"></label><label class="f" for="r-num"><span>번호</span><input type="number" id="r-num" min="1" max="40" inputmode="numeric"></label><label class="f" for="r-name"><span>이름</span><input type="text" id="r-name" autocomplete="off"></label></div><div class="btns"><button class="btn pri" data-act="register">등록하고 시작하기</button><button class="btn" data-act="import">저장한 PDF 불러와 이어 하기</button></div>';
+  return '<div class="stack"><div class="card stack">'+head(0,"사진과 광고는 현실을 그대로 옮긴 것처럼 보입니다. 오늘은 매체 자료 분석가가 되어, 화면 밖에 감춰진 것을 찾아봅니다. 활동 화면 옆에 교과서 쪽이 함께 열리니, 읽으면서 답하세요.")+
+   '<div class="keyq">수업 핵심 질문 · 매체 자료가 보여 주는 모습은 현실 그대로일까?</div>'+reg+
+   (u?'<label class="f" for="f-myQ"><span>★ 나의 질문 <small>오늘 수업에서 알고 싶은 것을 질문으로 써 보세요.</small></span><textarea id="f-myQ" data-bind="myQ" rows="2" placeholder="예) 광고는 왜 좋은 모습만 보여 줄까?">'+esc(S.myQ)+'</textarea></label>':'')+'</div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">오늘 할 일</h3><ol class="plan"><li>같은 하루, 다른 게시물: 담긴 장면과 빠진 장면 고르기 (188~191쪽)</li><li>개념 정리: 재현, 선택과 배제</li><li>광고·홍보물 분석: 내가 맡은 자료 하나를 깊이 분석하기 (194~199쪽)</li><li>모둠에서 나누기: 네 자료의 의도·관점·고정 관념 모으기</li><li>정리·제출: PDF를 클래스룸에 올리기</li></ol>'+
+   '<div class="ok"><b>정답 확인 방법</b> · 고르는 문항은 맞았는지만 알려 줍니다. 쓰는 문항은 먼저 쓴 뒤에 예시 답과 비교하고, 그다음 고쳐 씁니다. 처음 고른 답과 처음 쓴 답은 PDF에 함께 남습니다.</div></div>'+
+   (u?todoBox(0)+foot(0):'')+'<div class="btns" style="justify-content:flex-end"><button class="btn sm" data-act="live">교사용 · 실시간 보기</button><button class="btn sm" data-act="teacher">교사용 · 제출물 모아 보기</button></div></div>';
+};
+function postHTML(p){
+  var sc=p.sc.map(function(s,j){var key=p.id+j,v=S.sc[key],bad=S.scBad.indexOf(key)>=0;
+    return '<div class="scene '+(v===1?"in":v===0?"out":"")+(bad?" bad":"")+'"><span>'+esc(s[0])+'</span><div class="ph2"><button class="chip '+(v===1?"on":"")+'" data-act="sc" data-k="'+key+'" data-v="1"'+(S.scOk?" disabled":"")+'>담김</button><button class="chip '+(v===0?"on":"")+'" data-act="sc" data-k="'+key+'" data-v="0"'+(S.scOk?" disabled":"")+'>빠짐</button></div></div>';}).join("");
+  return '<div class="post"><h3>'+esc(p.n)+'</h3><span class="count">교과서 '+p.pg+'</span>'+sc+'</div>';
+}
+V[1]=function(){
+  var fb=S.scOk?'<div class="fb good"><b>모두 맞았습니다.</b> 세 게시물 모두 사실이지만, 같은 현실의 다른 조각을 골랐습니다.</div>':S.scTry?'<div class="fb bad"><b>'+S.scBad.length+'개를 다시 살펴보세요.</b> 붉은 테두리 장면입니다. 게시물 사진에 실제로 나오는지 교과서를 다시 보세요.</div>':'';
+  var inner='<div class="stack"><div class="card stack">'+head(1,"포니, 채은, 지훈이 사회 관계망 서비스(SNS)에 올린 게시물을 교과서에서 읽고, 장면마다 게시물에 ‘담김’인지 ‘빠짐’인지 고르세요.")+
+   '<div class="frame">'+POSTS.map(postHTML).join("")+'</div>'+fb+(S.scOk?'':'<div class="btns"><button class="btn pri" data-act="sccheck">장면 확인하기</button><span class="count">확인 '+S.scTry+'번</span></div>')+'</div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">드러내려는 생각</h3><p class="lead">그 장면을 고른 까닭을 생각하며, 각자 드러내려는 생각을 쓰세요.</p>'+
+   POSTS.map(function(p){return '<div class="q">'+writeHTML(p.t)+'</div>';}).join("")+
+   '<div class="q">'+writeHTML("why")+'</div></div>'+todoBox(1)+foot(1)+'</div>';
+  return withTB(1,inner);
+};
+V[2]=function(){
+  var inner='<div class="stack"><div class="card stack">'+head(2,"189쪽 아래의 뜻풀이와 191쪽 오른쪽 ‘매체 자료의 선택과 배제’를 읽고 빈칸을 채웁니다.")+
+   '<div class="q"><b>재현, 선택과 배제</b>'+clozeHTML("k1")+'</div>'+
+   ["c1","c2"].map(function(k){return '<div class="q"><b>'+esc(C[k].q)+'</b>'+choiceHTML(k)+'</div>';}).join("")+
+   '<div class="ok">☞ 관점이 없는 매체 자료는 없다. 그래서 문구와 이미지에 특정 집단에 관한 고정 관념이 담기지 않았는지도 살펴야 한다.</div></div>'+todoBox(2)+foot(2)+'</div>';
+  return withTB(2,inner);
+};
+V[3]=function(){
+  var pick='<div class="jig">'+ML.map(function(m){return '<button class="'+(S.jig===m?"on":"")+'" data-act="jig" data-m="'+m+'"'+(S.jig&&S.jig!==m&&jigLocked()?" disabled":"")+'><b>'+m+'</b>'+esc(MAT[m].n)+'<br><span class="count">'+MAT[m].pgt+'</span></button>';}).join("")+'</div>';
+  var body="";
+  if(S.jig){var m=S.jig,k=matKeys(m);
+    body='<div class="card stack"><div class="head"><h3 style="font-size:1.2rem">'+m+' '+esc(MAT[m].n)+'</h3><span class="meta">교과서 '+MAT[m].pgt+'</span></div>'+
+     '<div class="q"><b>무엇을 위해 만들었나?</b>'+choiceHTML(k.p)+'</div>'+
+     k.w.map(function(x){return '<div class="q">'+writeHTML(x)+'</div>';}).join("")+
+     '<div class="q"><b>고정 관념이 있나?</b><span class="count">특정 집단(성별, 나이, 가족 형태 등)을 하나의 모습으로 묶어 표현했는지 살펴보세요.</span>'+choiceHTML(k.s)+'</div></div>';}
+  var inner='<div class="stack"><div class="card stack">'+head(3,"모둠에서 선생님이 정해 준 자료를 하나 고르고, 그 자료의 전문가가 되어 분석합니다. 문장 틀을 그대로 채워도 괜찮습니다.")+pick+
+   (S.jig&&jigLocked()?'<p class="count">분석을 시작해서 자료를 바꿀 수 없습니다. 잘못 골랐다면 선생님께 알려 주세요.</p>':'<p class="count">질문이 많은 A·B를 먼저 맡습니다. 3인 모둠은 C·D를 한 사람이 맡고, 둘 중 하나를 고르세요.</p>')+'</div>'+body+todoBox(3)+foot(3)+'</div>';
+  return withTB(3,inner);
+};
+function jigLocked(){if(!S.jig)return false;var k=matKeys(S.jig);return [k.p,k.s].some(function(x){return cs(x).v!==null;})||k.w.some(function(x){return len(ws(x).a)>0;});}
+V[4]=function(){
+  var mine=S.jig?'<div class="q mine"><b>'+S.jig+' '+esc(MAT[S.jig].n)+' · 내가 분석한 자료</b><p>'+esc(finalW("v"+S.jig)||"(3단계에서 아직 쓰지 않았습니다)")+'</p><span class="count">고정 관념: '+(cs("s"+S.jig).ok?HAS[C["s"+S.jig].a]:"3단계에서 확인하세요")+'</span></div>':'<div class="todo">3단계에서 내가 맡은 자료를 먼저 고르세요.</div>';
+  var rest=S.jig?others().map(function(m){return '<div class="q">'+writeHTML("g"+m)+choiceHTML("s"+m,"고정 관념")+'</div>';}).join(""):"";
+  var inner='<div class="stack"><div class="card stack">'+head(4,"모둠 친구들이 맡은 자료를 발표합니다. 내 자료는 내가 발표하고, 친구의 발표를 들으며 나머지 세 자료의 의도와 관점을 한 줄로 쓰고 고정 관념이 있는지 고르세요.")+
+   '<div class="care">가족 형태나 성별 취향을 이야기할 때 우리 반 친구의 가족이나 취향을 예로 들지 않습니다. “다양한 가족이 있다”, “분홍을 좋아하는 남학생도 있다”처럼 일반적으로 말해요.</div>'+mine+rest+'</div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">네 자료를 겹쳐 보기</h3><div class="q">'+clozeHTML("k2")+'</div><div class="q">'+writeHTML("expo")+'</div></div>'+todoBox(4)+foot(4)+'</div>';
+  return withTB(4,inner);
+};
+function finalW(k){var w=S.w[k];if(!w)return "";return w.open?(w.b.trim()||w.a):w.a;}
+V[5]=function(){
+  var all=[];for(var i=0;i<LAST;i++){var m=missing(i);if(m.length)all.push('<li><b>'+i+'. '+STEPS[i].t+'</b> · '+m.map(esc).join(", ")+'</li>');}
+  return '<div class="stack"><div class="card stack">'+head(5,"오늘 배운 내용을 정리하고 결과를 제출합니다.")+
+   '<div class="q"><b>개념 정리</b>'+clozeHTML("k3")+'</div>'+
+   '<div class="q"><b>매체 자료를 볼 때 던질 질문</b><p>① 누가, 왜 만들었을까?<br>② 무엇을 선택하고 무엇을 배제했을까?</p><label class="f" for="f-q3"><span>③ 내 질문 <small>앞으로 매체 자료를 볼 때 스스로 던질 질문</small></span><input type="text" id="f-q3" data-bind="q3" value="'+esc(S.q3)+'" placeholder="예) 다른 관점의 자료는 어떻게 보여 줄까?"></label></div>'+
+   '<div class="q"><b>단원 마무리 (211쪽) · ○, ×를 고르세요</b>'+["ox1","ox2","ox3","ox4"].map(function(k){return '<div class="oxrow"><span>'+esc(C[k].q)+'</span><div>'+choiceHTML(k)+'</div></div>';}).join("")+'</div>'+
+   '<label class="f" for="f-reflect"><span>오늘 활동을 통한 나의 느낀 점 <small>2줄 이상 · 새롭게 알게 된 점, 깨달은 점, 변화된 점, 나의 질문에 대한 답</small></span><textarea id="f-reflect" data-bind="reflect" rows="3" placeholder="예) 친구가 올린 사진이 그 사람의 하루 전부라고 생각했는데, 고른 장면만 보여 준다는 것을 알았다.">'+esc(S.reflect)+'</textarea></label></div>'+
+   '<div class="card stack"><h3 style="font-size:1.15rem">저장하고 제출하기</h3>'+(all.length?'<div class="todo"><b>아직 남은 것</b><ul style="margin:4px 0 0;padding-left:20px">'+all.join("")+'</ul></div>':'<div class="ok">모든 단계를 마쳤습니다.</div>')+
+   '<p class="lead">결과 PDF를 저장해 클래스룸에 올리세요. 이 PDF가 국어 활동지(32)입니다. 다 하지 못했다면 이 PDF를 첫 화면에서 불러와 이어서 할 수 있습니다.</p>'+
+   '<div class="btns"><button class="btn pri" data-act="pdf">결과 PDF 저장</button><button class="btn" data-act="preview">활동지 미리 보기</button><button class="btn" data-act="import">저장한 PDF 불러오기</button><button class="btn danger" data-act="reset">'+(resetArm?"정말 지울까요? 한 번 더 누르면 지웁니다":"새로 시작")+'</button></div></div>'+todoBox(5)+foot(5)+'</div>';
+};
+/* ---------- 활동지(PDF) ---------- */
+function sec(x){return '<section class="sec">'+x+'</section>';}
+function cAns(k){var d=C[k],s=cs(k);if(s.v===null)return "-";return esc(d.o[s.ok?d.a:s.v])+(s.ok?"":" (미완료)")+(s.n?'<br><small>첫 선택: '+esc(d.o[s.first])+' · 틀린 횟수 '+s.n+'</small>':'');}
+function wAns(k){var w=ws(k);if(!w.a.trim())return "-";var fin=w.open?(w.b.trim()||w.a):w.a;return esc(fin)+(w.open&&w.b.trim()&&w.b.trim()!==w.a.trim()?'<br><small>처음 쓴 답: '+esc(w.a)+'</small>':'')+(w.open?'<br><small>자기 평가: '+(w.r===null?"-":RATE[w.r][0])+'</small>':'<br><small>(예시 답과 비교하지 않음)</small>');}
+function zAns(k){var d=Z[k],z=zs(k);return d.parts.map(function(p,i){return esc(p)+(i<d.ans.length?'<u>&nbsp;'+(i<z.i?esc(d.ans[i]):"&emsp;&emsp;")+'&nbsp;</u>':'');}).join("")+(z.n?' <small>(틀린 횟수 '+z.n+')</small>':'');}
+function scAns(p,want){var r=p.sc.map(function(s,j){return [s[0],S.sc[p.id+j]];}).filter(function(x){return x[1]===want;}).map(function(x){return esc(x[0]);});return r.join(", ")||"-";}
+function sheetHTML(){
+  var u=S.user,d=new Date(),m=S.jig;
+  var a1='<table><tr><th></th>'+POSTS.map(function(p){return '<th>'+esc(p.n)+'</th>';}).join("")+'</tr><tr><th>선택한 장면</th>'+POSTS.map(function(p){return '<td>'+scAns(p,1)+'</td>';}).join("")+'</tr><tr><th>배제된 장면</th>'+POSTS.map(function(p){return '<td>'+scAns(p,0)+'</td>';}).join("")+'</tr><tr><th>드러내려는 생각</th>'+POSTS.map(function(p){return '<td>'+wAns(p.t)+'</td>';}).join("")+'</tr></table><p class="cap">장면 고르기 '+(S.scOk?"완료":"미완료")+' · 확인 '+S.scTry+'번'+(S.scFirst!==null?' · 첫 확인 때 맞은 장면 '+S.scFirst+'/'+NSC:'')+'</p><p>→ 세 게시물 모두 거짓은 없다. 왜 다르게 보일까?<br>'+wAns("why")+'</p>';
+  var a2=m?(function(k){return '<p><b>내가 맡은 자료: '+m+' '+esc(MAT[m].n)+'</b> ('+MAT[m].pgt+')</p><table><tr><th>무엇을 위해 만들었나?</th><td>'+cAns(k.p)+'</td></tr>'+k.w.map(function(x){return '<tr><th>'+esc(W[x].l)+'</th><td>'+wAns(x)+'</td></tr>';}).join("")+'<tr><th>고정 관념이 있나?</th><td>'+cAns(k.s)+'</td></tr></table>';})(matKeys(m)):'<p>(맡은 자료를 고르지 않음)</p>';
+  var a3='<table><tr><th>자료</th><th>의도와 관점 한 줄</th><th>고정 관념</th></tr>'+ML.map(function(x){return '<tr><th>'+x+' '+esc(MAT[x].n)+(x===m?' <small>(내 자료)</small>':'')+'</th><td>'+(x===m?esc(finalW("v"+x)||"-"):m?wAns("g"+x):"-")+'</td><td>'+(m?cAns("s"+x):"-")+'</td></tr>';}).join("")+'</table><p style="margin-top:6px">→ '+zAns("k2")+'</p><p>→ C와 D의 고정 관념에 계속 노출되면?<br>'+wAns("expo")+'</p>';
+  return sec('<h1>2학년 2학기 4단원 국어 활동지(32) · 사진 밖, 광고 속에 감춰진 것</h1><p class="cap">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+' · '+d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 · 4. 읽고 분석하고 (2) 현실을 재현하는 매체 자료</p>')+
+   sec('<h2>학습 활동 목표</h2><p>1. [수업 핵심 질문] 매체 자료가 보여 주는 모습은 현실 그대로일까?\n2. (★나의 질문) '+esc(S.myQ)+'</p>')+
+   sec('<h2>활동 1 · 같은 하루, 같은 축제, 다른 게시물 (188~191쪽)</h2>'+a1)+
+   sec('<h2>개념 정리 · 재현, 선택과 배제</h2><p>'+zAns("k1")+'</p><table>'+["c1","c2"].map(function(k){return '<tr><td>'+esc(C[k].q)+'</td><td style="width:40%">'+cAns(k)+'</td></tr>';}).join("")+'</table>')+
+   sec('<h2>활동 2 · 광고·홍보물 분석하기 — 모둠 직소 (194~199쪽)</h2>'+a2)+
+   sec('<h2>활동 3 · 모둠에서 나누기</h2>'+a3)+
+   sec('<h2>수업 정리</h2><p>'+zAns("k3")+'</p><p>매체 자료를 볼 때 던질 질문 ① 누가, 왜 만들었을까? ② 무엇을 선택하고 무엇을 배제했을까? ③ '+esc(S.q3||"-")+'</p><table>'+["ox1","ox2","ox3","ox4"].map(function(k){return '<tr><td>'+esc(C[k].q)+'</td><td style="width:22%">'+cAns(k)+'</td></tr>';}).join("")+'</table>')+
+   sec('<h2>오늘 활동을 통한 나의 느낀 점</h2><p>'+esc(S.reflect)+'</p>');
+}
+function withState(st,fn){var o=S;S=st;try{return fn();}finally{S=o;}}
+function info(st){return withState(st,function(){
+  var done=[];for(var i=0;i<=LAST;i++)done.push(missing(i).length===0);
+  var ck=[],wk=[];for(var j=1;j<=LAST;j++)itemsOf(j).forEach(function(k){if(C[k]&&ck.indexOf(k)<0)ck.push(k);if(W[k]&&wk.indexOf(k)<0)wk.push(k);});
+  var first=ck.filter(function(k){var s=st.c[k];return s&&s.ok&&s.n===0;}).length,miss=ck.reduce(function(a,k){return a+((st.c[k]||{}).n||0);},0)+Object.keys(Z).reduce(function(a,k){return a+((st.z[k]||{}).n||0);},0)+(st.scTry>1?st.scTry-1:0);
+  var rated=wk.map(function(k){var w=st.w[k];return w&&w.r!==null&&w.r!==undefined?RATE[w.r][0]:"·";}).join("");
+  var rev=wk.filter(function(k){var w=st.w[k];return w&&w.open&&w.b.trim()&&w.b.trim()!==w.a.trim();}).length;
+  var avg=wk.length?Math.round(wk.reduce(function(a,k){return a+len((st.w[k]||{}).a);},0)/wk.length):0;
+  return {done:done,n:done.filter(Boolean).length,first:first,ctot:ck.length||1,miss:miss,rated:rated,rev:rev,wtot:wk.length,avg:avg};});}
+function teacherView(){
+  var L=T.list,I=L.map(info),N=STEPS.length;
+  var rows=L.map(function(s,i){var x=I[i],u=s.user;return '<tr><td class="num">'+esc(u.ban)+'-'+esc(u.num)+'</td><td>'+esc(u.name)+'</td><td>'+esc(s.jig||"-")+'</td><td><span class="prog">'+x.done.map(function(d){return '<i class="'+(d?"on":"")+'"></i>';}).join("")+'</span> '+x.n+'/'+N+'</td><td class="num">'+x.first+'/'+x.ctot+'</td><td class="num'+(x.miss>=12?" bad":"")+'">'+x.miss+'</td><td>'+x.rated+'</td><td class="num">'+x.rev+'/'+x.wtot+'</td><td class="num'+(x.avg<8?" bad":"")+'">'+x.avg+'</td><td><button class="btn sm" data-act="tview" data-i="'+i+'">활동지 보기</button></td></tr>';}).join("");
+  var fin=I.filter(function(x){return x.n===N;}).length;
+  return '<div class="stack"><div class="card stack"><div class="head"><h2>교사용 · 제출물 모아 보기</h2><span class="meta">불러온 내용은 이 화면에만 있고 저장되지 않습니다</span></div><p class="lead">학생들이 클래스룸에 제출한 PDF를 내려받아 한꺼번에 선택하세요.</p>'+
+   '<div class="btns"><button class="btn pri" data-act="tpick">PDF 여러 개 불러오기</button>'+(L.length?'<button class="btn" data-act="tcsv">표를 CSV로 저장</button><button class="btn" data-act="tclear">모두 비우기</button>':'')+'<button class="btn" data-act="tclose">닫기</button></div>'+(T.bad.length?'<div class="todo"><b>기록을 읽지 못한 파일 '+T.bad.length+'개</b> · '+T.bad.map(esc).join(", ")+'</div>':'')+'</div>'+
+   (L.length?'<div class="card stack"><div class="tiles"><div class="tile"><b>'+L.length+'명</b><span>제출</span></div><div class="tile"><b>'+fin+'명</b><span>모든 단계 완료</span></div><div class="tile"><b>'+(I.reduce(function(a,x){return a+x.first/x.ctot;},0)/L.length*100).toFixed(0)+'%</b><span>고르는 문항 첫 시도 정답률</span></div><div class="tile"><b>'+ML.map(function(m){return m+L.filter(function(s){return s.jig===m;}).length;}).join(" ")+'</b><span>맡은 자료별 인원</span></div></div>'+
+    '<div class="tablebox"><table class="chk"><thead><tr><th>반-번호</th><th>이름</th><th>맡은 자료</th><th>진행</th><th>첫 시도 정답</th><th>틀린 횟수</th><th>자기 평가</th><th>고쳐 쓴 문항</th><th>첫 답 평균 글자</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="count">진행 칸은 0~'+LAST+'단계 순서 · 자기 평가는 쓰는 문항 순서(◎ 잘함 ○ 보통 △ 노력 필요) · 틀린 횟수가 많거나 첫 답이 매우 짧으면 붉게 표시</p></div>':'<div class="card"><p class="lead">아직 불러온 제출물이 없습니다.</p></div>')+'</div>';
+}
+function viewerView(){
+  var st=viewState,inT=!!T&&tIdx>=0,inL=!!LV&&st!==S,u=st.user;
+  return '<div class="stack"><div class="peerbar"><b>'+(inT?"2학년 "+esc(u.ban)+"반 "+esc(u.num)+"번 "+esc(u.name):inL?"지금 하는 중 · 2학년 "+esc(u.ban)+"반 "+esc(u.num)+"번 "+esc(u.name):"활동지 미리 보기")+'</b><div class="btns">'+(inT?'<button class="btn" data-act="tnav" data-d="-1"'+(tIdx<=0?" disabled":"")+'>← 이전 학생</button><button class="btn" data-act="tnav" data-d="1"'+(tIdx>=T.list.length-1?" disabled":"")+'>다음 학생 →</button>':'')+'<button class="btn" data-act="viewoff">'+(inT||inL?"목록으로":"닫기")+'</button></div></div><div class="card"><div class="sheet">'+withState(st,sheetHTML)+'</div></div></div>';
+}
+/* ---------- 그리기 ---------- */
+function renderWho(){var u=S.user,w=$("#who");if(!u){w.innerHTML='<span>등록 전</span>';return;}
+  w.innerHTML='<span>2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+(S.jig?' · 자료 '+S.jig:'')+'</span><span><i class="dot '+(saveFail?"off":"")+'"></i>'+(saveFail?"이 기기에 저장하지 못함 · PDF로 저장하세요":saved?"자동 저장됨":"저장 중")+'</span>'+(LIVE_URL&&liveOk!==null?'<span><i class="dot '+(liveOk?"":"off")+'"></i>'+(liveOk?"선생님 화면에 공유 중":"선생님 화면에 연결 안 됨")+'</span>':'');}
+function renderNav(){
+  $("#nav").innerHTML=STEPS.map(function(s,i){var done=S.user&&missing(i).length===0;
+    return '<button class="stepbtn '+(S.step===i?"cur ":"")+(done?"done":"")+'" data-act="go" data-i="'+i+'"'+(!S.user&&i>0?" disabled":"")+(S.step===i?' aria-current="step"':"")+'><span class="n">'+(done?"✓":i)+'</span>'+s.t+'</button>';}).join("");
+}
+function render(keep){
+  var y=window.scrollY,plain=!!(viewState||T||LV);
+  $("#nav").classList.toggle("hide",plain);
+  $("#wrap").classList.toggle("wide",!plain&&tbPages(S.step).length>0);
+  $("#main").innerHTML=viewState?viewerView():LV?liveView():T?teacherView():V[S.step]();
+  [].forEach.call(document.querySelectorAll(".tbp img"),function(im){im.addEventListener("error",function(){TBV.err[im.dataset.pg]=true;render(true);});});
+  renderWho();renderNav();window.scrollTo(0,keep?y:0);
+}
+function refreshTodo(){var t=$("#todo");if(t){var tmp=document.createElement("div");tmp.innerHTML=todoBox(S.step);t.replaceWith(tmp.firstChild);}renderNav();}
+/* ---------- 파일 ---------- */
+function saveFile(name,data){
+  var blob=data instanceof Blob?data:new Blob([data]);
+  if(dl){return dl.save({filename:name,data:blob}).then(function(){toast("저장했습니다: "+name);}).catch(function(e){toast(e&&e.code==="declined"?"저장을 취소했습니다.":"저장하지 못했습니다. 선생님께 알려 주세요.");});}
+  try{var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},4000);toast("내려받기를 시작했습니다: "+name);}catch(e){toast("이 화면에서는 파일 저장이 되지 않습니다.");}
+  return Promise.resolve();
+}
+function htmlText(html){
+  var t=String(html).replace(/<br\s*\/?>/gi," / ").replace(/<\/t[dh]>/gi," | ").replace(/<\/tr>/gi,"\n").replace(/<h2[^>]*>/gi,"\n■ ").replace(/<\/(h1|h2|p|section)>/gi,"\n").replace(/<[^>]+>/g,"");
+  var ta=document.createElement("textarea");ta.innerHTML=t;
+  return ta.value.replace(/[ \t]+\|\s*\n/g,"\n").replace(/\n{3,}/g,"\n\n").trim();
+}
+function reportText(){
+  var keys=[];for(var j=1;j<=LAST;j++)itemsOf(j).forEach(function(k){if(W[k]&&keys.indexOf(k)<0)keys.push(k);});
+  var ex=keys.map(function(k){return "  "+W[k].l+": "+W[k].ex;}).join("\n");
+  return htmlText(sheetHTML())+"\n\n■ (교사용) 쓰는 문항 예시 답\n"+ex+"\n\n■ (교사용) 관찰 평가 기준(활동 2·3)\n  잘함: 선택·배제를 근거로 의도·관점·고정 관념을 설명함 / 보통: 의도는 파악했으나 근거가 부족함 / 노력 필요: 자료 내용만 옮겨 적음";
+}
+function metaOf(){var x=info(S);return {act:ACT,title:ACT_TITLE,done:x.n+"/"+STEPS.length,first:x.first+"/"+x.ctot,miss:x.miss,avg:x.avg};}
+function packState(){var o=JSON.parse(JSON.stringify(S));try{o.__text=reportText();o.__meta=metaOf();}catch(e){}var b=new TextEncoder().encode(JSON.stringify(o)),s="";for(var i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(s);}
+function unpackPDF(buf){var t=new TextDecoder("latin1").decode(buf),k=t.lastIndexOf(MARK);if(k<0)return null;var e=t.indexOf("\n",k),s=atob(t.slice(k+MARK.length,e<0?t.length:e).trim()),b=new Uint8Array(s.length);for(var i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder("utf-8").decode(b);}
+function valid(d){return d&&d.v===1&&d.user&&d.c&&d.w&&d.sc;}
+function makePDF(){
+  if(typeof html2canvas!=="function"||!window.jspdf){toast("PDF 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로 고침 하세요.");return;}
+  var u=S.user,name="국어활동지32_2학년"+u.ban+"반"+u.num+"번_"+u.name+".pdf";
+  var box=document.createElement("div");box.className="sheet shot";box.innerHTML=sheetHTML();document.body.appendChild(box);
+  toast("PDF를 만드는 중입니다. 잠시 기다려 주세요.");
+  var Wd=box.offsetWidth,kids=[].map.call(box.children,function(k){return [k.offsetTop,k.offsetTop+k.offsetHeight];});
+  html2canvas(box,{scale:2,backgroundColor:"#ffffff"}).then(function(c){
+    var k=c.width/Wd,pageH=Math.floor(c.width*277/190),H=c.height,y=0,cuts=[0],edges=[];
+    kids.forEach(function(b){edges.push(Math.round(b[0]*k),Math.round(b[1]*k));});
+    while(H-y>pageH){var lim=y+pageH,cut=0;edges.forEach(function(e){if(e>y&&e<=lim&&e>cut)cut=e;});if(cut-y<pageH*0.3)cut=lim;y=cut;cuts.push(y);}
+    cuts.push(H);
+    var pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4"}),first=true;
+    for(var i=0;i<cuts.length-1;i++){var h=cuts[i+1]-cuts[i];if(h<=0)continue;var pc=document.createElement("canvas");pc.width=c.width;pc.height=h;var g=pc.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,pc.width,h);g.drawImage(c,0,cuts[i],c.width,h,0,0,c.width,h);if(!first)pdf.addPage();first=false;pdf.addImage(pc.toDataURL("image/jpeg",0.9),"JPEG",10,10,190,h*190/c.width);}
+    box.remove();saveFile(name,new Blob([pdf.output("blob"),"\n"+MARK+packState()+"\n"],{type:"application/pdf"}));
+  }).catch(function(){box.remove();toast("PDF를 만들지 못했습니다. 선생님께 알려 주세요.");});
+}
+function tAdd(st){var k=ukey(st.user),n=info(st).n;for(var i=0;i<T.list.length;i++){if(ukey(T.list[i].user)===k){if(n>=info(T.list[i]).n)T.list[i]=st;return;}}T.list.push(st);}
+function tLoad(files){var i=0;(function next(){
+  if(i>=files.length){T.list.sort(function(a,b){return (+a.user.ban-+b.user.ban)||(+a.user.num-+b.user.num);});render();toast("제출물 "+T.list.length+"건을 불러왔습니다.");return;}
+  var f=files[i++],fr=new FileReader();
+  fr.onload=function(){try{var d=JSON.parse(unpackPDF(fr.result));if(!valid(d))throw 0;tAdd(Object.assign(fresh(),d));}catch(e){T.bad.push(f.name);}next();};
+  fr.onerror=function(){T.bad.push(f.name);next();};fr.readAsArrayBuffer(f);})();}
+/* ---------- 실시간 보기 ---------- */
+function liveKey(u){return ACT+":"+u.ban+"-"+u.num+"-"+u.name;}
+function liveSend(beacon){
+  if(!LIVE_URL||framed||!S.user||T||LV||viewState)return;
+  var p;try{var x=info(S),d=JSON.parse(JSON.stringify(S));
+    p=JSON.stringify({action:"save",key:liveKey(S.user),ban:S.user.ban,num:S.user.num,name:S.user.name,step:S.step,done:x.done.map(function(v){return v?"1":"0";}).join(""),chars:Object.keys(S.w).reduce(function(a,k){return a+len(S.w[k].a);},0),mats:x.first,noSrc:x.miss,data:JSON.stringify(d)});}catch(e){return;}
+  if(p===liveLast)return;liveLast=p;
+  if(beacon===true){try{navigator.sendBeacon(LIVE_URL,new Blob([p],{type:"text/plain;charset=utf-8"}));}catch(e){}return;}
+  fetch(LIVE_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:p}).then(function(){if(liveOk!==true){liveOk=true;renderWho();}}).catch(function(){liveLast="";if(liveOk!==false){liveOk=false;renderWho();}});
+}
+function liveGet(q){return fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+q+"&act="+ACT+"&key="+encodeURIComponent(LV.key)+"&t="+Date.now()).then(function(r){return r.json();});}
+function livePoll(){
+  if(!LV||!LV.key)return;
+  liveGet("action=list").then(function(d){
+    if(!LV)return;
+    if(d&&d.ok){LV.err="";LV.rows=d.rows||[];LV.now=d.now;LV.at=new Date();}
+    else if(d&&d.error==="key"){LV.err="비밀번호가 다릅니다.";LV.key="";LV.rows=[];}
+    else LV.err="목록을 읽지 못했습니다.";
+    if(!viewState)render(true);
+  }).catch(function(){if(!LV)return;LV.err="연결하지 못했습니다. 웹에 올린 주소로 열었는지 확인하세요.";if(!viewState)render(true);});
+}
+function ago(ms){var s=Math.max(0,Math.round(ms/1000));return s<60?s+"초 전":Math.floor(s/60)+"분 전";}
+function liveView(){
+  var top='<div class="head"><h2>교사용 · 실시간 보기</h2><span class="meta">'+(LV.at?"마지막 갱신 "+LV.at.toLocaleTimeString("ko-KR")+" · 10초마다 새로 읽음":"")+'</span></div>';
+  if(!LIVE_URL||framed)return '<div class="stack"><div class="card stack">'+top+'<div class="todo">실시간 보기는 웹에 올린 주소에서만 쓸 수 있습니다.</div><div class="btns"><button class="btn" data-act="lclose">닫기</button></div></div></div>';
+  if(!LV.key)return '<div class="stack"><div class="card stack">'+top+(LV.err?'<div class="todo">'+esc(LV.err)+'</div>':'')+'<label class="f" for="lv-key"><span>교사 비밀번호</span><input type="text" id="lv-key" autocomplete="off"></label><div class="btns"><button class="btn pri" data-act="lstart">보기 시작</button><button class="btn" data-act="lclose">닫기</button></div></div></div>';
+  var all=LV.rows.slice().sort(function(a,b){return (+a.ban-+b.ban)||(+a.num-+b.num);}),bans=[];
+  all.forEach(function(r){if(bans.indexOf(r.ban)<0)bans.push(r.ban);});
+  var L=LV.filter?all.filter(function(r){return r.ban===LV.filter;}):all,now=LV.now||Date.now(),per=STEPS.map(function(){return 0;});
+  L.forEach(function(r){if(per[r.step]!=null)per[r.step]++;});
+  var idle=L.filter(function(r){return now-r.updated>180000;}).length;
+  var rows=L.map(function(r){var q=now-r.updated,st=now-r.stepSince,dn=String(r.done||"");
+    return '<tr><td class="num">'+esc(r.ban)+'-'+esc(r.num)+'</td><td>'+esc(r.name)+'</td><td>'+r.step+'. '+esc((STEPS[r.step]||{}).t||"")+(st>600000?' <span class="bad">'+Math.floor(st/60000)+'분째</span>':'')+'</td><td><span class="prog">'+STEPS.map(function(_,i){return '<i class="'+(dn.charAt(i)==="1"?"on":"")+'"></i>';}).join("")+'</span></td><td class="num">'+r.mats+'</td><td class="num'+(r.noSrc>=12?" bad":"")+'">'+r.noSrc+'</td><td class="num">'+r.chars+'</td><td class="'+(q>180000?"bad":"")+'">'+ago(q)+'</td><td><button class="btn sm" data-act="lview" data-id="'+esc(r.key)+'">보기</button></td></tr>';}).join("");
+  return '<div class="stack"><div class="card stack">'+top+(LV.err?'<div class="todo">'+esc(LV.err)+'</div>':'')+
+    '<div class="btns">'+(bans.length>1?'<label for="lv-ban" style="font-size:.9rem">반</label><select id="lv-ban" style="width:auto"><option value="">전체</option>'+bans.map(function(b){return '<option value="'+esc(b)+'"'+(LV.filter===b?" selected":"")+'>'+esc(b)+'반</option>';}).join("")+'</select>':'')+'<button class="btn" data-act="lrefresh">지금 새로 읽기</button><button class="btn danger" data-act="lclear">'+(LV.arm?"정말 지울까요? 한 번 더 누르면 이 활동지의 실시간 기록을 지웁니다":"이 활동지 실시간 기록 지우기")+'</button><button class="btn" data-act="lclose">닫기</button></div>'+
+    '<div class="tiles"><div class="tile"><b>'+L.length+'명</b><span>참여</span></div><div class="tile"><b>'+idle+'명</b><span>3분 넘게 입력 없음</span></div><div class="tile"><b>'+L.filter(function(r){return r.noSrc>=12;}).length+'명</b><span>많이 틀리는 중</span></div></div>'+
+    '<div class="chips">'+STEPS.map(function(s,i){return '<span class="chip static'+(per[i]?" on":"")+'">'+i+'. '+s.t+' '+per[i]+'명</span>';}).join("")+'</div></div>'+
+    '<div class="card stack">'+(L.length?'<div class="tablebox"><table class="chk"><thead><tr><th>반-번호</th><th>이름</th><th>지금 단계</th><th>진행</th><th>첫 시도 정답</th><th>틀린 횟수</th><th>쓴 글자 수</th><th>마지막 입력</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="count">진행 칸은 0~'+LAST+'단계 순서 · 한 단계에 10분 넘게 머물면 머문 시간이 표시됩니다</p>':'<p class="lead">아직 들어온 학생이 없습니다. 학생이 등록하고 입력을 시작하면 20초 안에 나타납니다.</p>')+'</div></div>';
+}
+function csvCell(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
+/* ---------- 동작 ---------- */
+var A={
+  go:function(d){if(!S.user)return;S.step=+d.i;resetArm=false;touch();render();setTimeout(liveSend,1500);},
+  register:function(){var ban=$("#r-ban").value.trim(),num=$("#r-num").value.trim(),name=$("#r-name").value.trim();if(!ban||!num||!name){toast("반, 번호, 이름을 모두 적어 주세요.");return;}
+    var u={ban:ban,num:num,name:name},old=lsGet(ukey(u));if(old){try{S=Object.assign(fresh(),JSON.parse(old));toast("이전 기록을 이어서 엽니다.");}catch(e){S=fresh();S.user=u;}}else{S=fresh();S.user=u;}saveNow();render();},
+  ch:function(d){var s=cs(d.k),v=+d.v;if(s.ok)return;if(s.first===null)s.first=v;s.v=v;if(v===C[d.k].a)s.ok=true;else s.n++;touch();render(true);},
+  open:function(d){var w=ws(d.k);if(len(w.a)<W[d.k].min)return;w.open=true;w.b=w.a;touch();render(true);},
+  rate:function(d){ws(d.k).r=+d.v;touch();render(true);},
+  zb:function(d){var z=zs(d.k),D=Z[d.k];if(d.w===D.ans[z.i]){z.i++;z.off=[];}else{z.n++;z.off.push(d.w);}touch();render(true);},
+  sc:function(d){if(S.scOk)return;S.sc[d.k]=+d.v;var k=S.scBad.indexOf(d.k);if(k>=0)S.scBad.splice(k,1);touch();render(true);},
+  sccheck:function(){var bad=[];POSTS.forEach(function(p){p.sc.forEach(function(s,j){if(S.sc[p.id+j]!==s[1])bad.push(p.id+j);});});
+    S.scTry++;if(S.scFirst===null)S.scFirst=NSC-bad.length;S.scBad=bad;S.scOk=!bad.length;touch();render(true);},
+  jig:function(d){if(S.jig&&S.jig!==d.m&&jigLocked())return;S.jig=d.m;TBV.pg=0;touch();render(true);},
+  tbpg:function(d){TBV.pg=+d.p;render(true);},
+  tbzoom:function(){TBV.zoom=!TBV.zoom;render(true);},
+  tbtog:function(){TBV.open=!TBV.open;render(true);},
+  pdf:function(){makePDF();},
+  preview:function(){viewState=S;render();},
+  viewoff:function(){viewState=null;tIdx=-1;render();if(LV)livePoll();},
+  import:function(){var f=$("#onePick");f.value="";f.click();},
+  teacher:function(){T={list:[],bad:[]};render();},
+  live:function(){LV={key:"",rows:[],err:"",filter:"",arm:false,timer:setInterval(livePoll,10000)};render();},
+  lstart:function(){var k=$("#lv-key").value.trim();if(!k){toast("비밀번호를 적어 주세요.");return;}LV.key=k;LV.err="";render();livePoll();},
+  lrefresh:function(){livePoll();},
+  lclose:function(){clearInterval(LV.timer);LV=null;viewState=null;render();},
+  lview:function(d){liveGet("action=get&id="+encodeURIComponent(d.id)).then(function(r){if(!r||!r.ok)throw 0;viewState=Object.assign(fresh(),JSON.parse(r.data));render();}).catch(function(){toast("이 학생의 기록을 읽지 못했습니다.");});},
+  lclear:function(){if(!LV.arm){LV.arm=true;render(true);return;}LV.arm=false;liveGet("action=clear").then(function(){LV.rows=[];render(true);toast("실시간 기록을 지웠습니다.");}).catch(function(){toast("지우지 못했습니다.");});},
+  tclose:function(){T=null;tIdx=-1;render();},
+  tclear:function(){T={list:[],bad:[]};render();},
+  tpick:function(){var f=$("#multiPick");f.value="";f.click();},
+  tview:function(d){tIdx=+d.i;viewState=T.list[tIdx];render();},
+  tnav:function(d){var n=tIdx+(+d.d);if(n<0||n>=T.list.length)return;tIdx=n;viewState=T.list[n];render();},
+  tcsv:function(){var wk=Object.keys(W),rows=[["반","번호","이름","맡은 자료","완료 단계 수("+STEPS.length+")","고르는 문항 첫 시도 정답","고르는 문항 수","틀린 횟수","고쳐 쓴 문항","첫 답 평균 글자 수","장면 확인 횟수","나의 질문","나의 질문 ③","느낀 점"].concat(wk.map(function(k){return W[k].l+" (처음)";}),wk.map(function(k){return W[k].l+" (고친 답)";}),wk.map(function(k){return W[k].l+" (자기 평가)";}))];
+    T.list.forEach(function(s){var x=info(s),u=s.user,g=function(k){return s.w[k]||{};};rows.push([u.ban,u.num,u.name,s.jig,x.n,x.first,x.ctot,x.miss,x.rev,x.avg,s.scTry,s.myQ,s.q3,s.reflect].concat(wk.map(function(k){return g(k).a||"";}),wk.map(function(k){return g(k).open?g(k).b:"";}),wk.map(function(k){var r=g(k).r;return r===null||r===undefined?"":RATE[r][1];})));});
+    saveFile("국어활동지32_제출물_요약.csv","﻿"+rows.map(function(r){return r.map(csvCell).join(",");}).join("\r\n"));},
+  reset:function(){if(!resetArm){resetArm=true;render(true);return;}try{localStorage.removeItem(ukey(S.user));localStorage.removeItem(PRE+"last");}catch(e){}S=fresh();resetArm=false;saved=true;render();}
+};
+document.addEventListener("click",function(e){var el=e.target.closest("[data-act]");if(!el||el.disabled)return;var f=A[el.dataset.act];if(f)f(el.dataset,el);});
+document.addEventListener("input",function(e){var el=e.target,d=el.dataset||{};
+  if(d.bind){S[d.bind]=el.value;touch();refreshTodo();}
+  else if(d.w){var w=ws(d.w);if(w.open)return;w.a=el.value;touch();var n=len(w.a);$("#wc-"+d.w).textContent=n+"자";$("#ob-"+d.w).disabled=n<W[d.w].min;}
+  else if(d.wb){ws(d.wb).b=el.value;touch();}});
+document.addEventListener("paste",function(e){var d=e.target.dataset||{};if(d.w||d.wb){e.preventDefault();toast("붙여 넣기는 할 수 없습니다. 직접 써 주세요.");}});
+document.addEventListener("change",function(e){var el=e.target;
+  if(el.id==="multiPick"&&el.files.length&&T)tLoad([].slice.call(el.files));
+  if(el.id==="onePick"&&el.files[0]){var fr=new FileReader();fr.onload=function(){var d=null;try{d=JSON.parse(unpackPDF(fr.result));}catch(x){}
+    if(valid(d)){S=Object.assign(fresh(),d);S.mode=MODE;saveNow();render();toast(d.user.name+" 분석가의 기록을 불러왔습니다. 이어서 하세요.");}else toast("이 활동지에서 저장한 PDF가 아닙니다.");};fr.readAsArrayBuffer(el.files[0]);}});
+window.addEventListener("beforeunload",function(){if(!saved)saveNow();liveSend(true);});
+document.addEventListener("change",function(e){if(e.target.id==="lv-ban"&&LV){LV.filter=e.target.value;render(true);}});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="lv-key"){e.preventDefault();A.lstart();}});
+document.addEventListener("contextmenu",function(e){if(e.target.closest(".tbp"))e.preventDefault();});
+setInterval(liveSend,20000);setTimeout(liveSend,3000);
+(function(){var k=lsGet(PRE+"last"),d=k&&lsGet(k);if(d){try{S=Object.assign(fresh(),JSON.parse(d));}catch(e){S=fresh();}}})();
+render();
+if(window.claude&&typeof window.claude.use==="function"){window.claude.use("downloads").then(function(x){dl=x||null;}).catch(function(){});}
+})();
+</script>
+</body>
+</html>
