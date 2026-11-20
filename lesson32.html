@@ -270,11 +270,15 @@ function fresh(){return {v:1,mode:MODE,user:null,myQ:"",c:{},w:{},z:{},sc:{},scT
 var S=fresh(),saved=true,saveFail=false,timer=null,T=null,tIdx=-1,viewState=null,resetArm=false,dl=null,LV=null,liveLast="",liveOk=null,TBV={pg:0,zoom:false,open:true,err:{}};
 var framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}
 var openBusy=false,awayAt=0,quiet=false,prevLen=new WeakMap();
-function junk(t){var s=String(t||"").replace(/\s/g,"");
+function junk(t,k){var s=String(t||"").replace(/\s/g,"");
   if(/[ㄱ-ㅎㅏ-ㅣ]{2,}/.test(s))return "자음이나 모음만 쓴 부분이 있습니다. 낱말과 문장으로 써 주세요.";
   if(/(.)\1{3,}/.test(s)||/(..)\1{2,}/.test(s))return "같은 글자를 되풀이했습니다. 내 생각을 문장으로 써 주세요.";
   var u={};for(var i=0;i<s.length;i++)u[s.charAt(i)]=1;if(Object.keys(u).length<Math.min(5,s.length))return "글자가 너무 단조롭습니다. 내 생각을 문장으로 써 주세요.";
   if((s.match(/[가-힣A-Za-z0-9]/g)||[]).length<s.length*0.6)return "기호가 너무 많습니다. 내 생각을 문장으로 써 주세요.";
+  var ph=k&&W[k]?String(W[k].ph||""):"",cut=function(x){return String(x||"").replace(/[\s.,!?~·…'"“”‘’()？]/g,"");},a2=cut(t),p2=cut(ph);
+  if(p2){var bg=function(x){var o={};for(var i=0;i<x.length-1;i++)o[x.substr(i,2)]=1;return o;},A=bg(a2),P=bg(p2),ka=Object.keys(A),hit=0;ka.forEach(function(x){if(P[x])hit++;});
+    if(a2===p2||(a2.length>=p2.length*0.7&&ka.length&&hit/ka.length>=0.7))return "입력 칸의 안내 문구를 옮겨 적었습니다. 그 물음에 대한 답을 써 주세요.";}
+  if(/[?？]\s*$/.test(String(t||"").trim()))return "질문이 아니라 답을 써 주세요. 물음표로 끝나는 답은 받을 수 없습니다.";
   return "";}
 function guarded(el){return !!el&&(el.tagName==="TEXTAREA"||(el.tagName==="INPUT"&&el.type==="text"))&&el.id!=="r-name"&&el.id!=="lv-key";}
 function mmss(ms){var s=Math.round((ms||0)/1000);return s<60?s+"초":Math.floor(s/60)+"분 "+(s%60)+"초";}
@@ -579,7 +583,7 @@ var A={
   register:function(){if(!$("#ack")||!$("#ack").checked){toast("안내를 읽고 '위 안내를 읽었어요'에 표시해 주세요.");return;}var ban=$("#r-ban").value.trim(),num=$("#r-num").value.trim(),name=$("#r-name").value.trim();if(!ban||!num||!name){toast("반, 번호, 이름을 모두 적어 주세요.");return;}
     var u={ban:ban,num:num,name:name},old=lsGet(ukey(u));if(old){try{S=Object.assign(fresh(),JSON.parse(old));toast("이전 기록을 이어서 엽니다.");}catch(e){S=fresh();S.user=u;}}else{S=fresh();S.user=u;}saveNow();render();},
   ch:function(d){var s=cs(d.k),v=+d.v;if(s.ok)return;if(s.first===null)s.first=v;s.v=v;if(v===C[d.k].a)s.ok=true;else s.n++;touch();render(true);},
-  open:function(d){var k=d.k,w=ws(k);if(len(w.a)<W[k].min||w.open||openBusy)return;var bad=junk(w.a);if(bad){toast(bad);return;}
+  open:function(d){var k=d.k,w=ws(k);if(len(w.a)<W[k].min||w.open||openBusy)return;var bad=junk(w.a,k);if(bad){toast(bad);return;}
     if(!LIVE_URL||framed){toast("예시 답은 웹에 올린 주소에서만 볼 수 있습니다.");return;}
     openBusy=true;var b=$("#ob-"+k);if(b){b.disabled=true;b.textContent="예시 답 불러오는 중…";}
     fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=ex&act="+ACT+"&k="+encodeURIComponent(k)+"&id="+encodeURIComponent(liveKey(S.user))+"&a="+encodeURIComponent(w.a.slice(0,300))+"&t="+Date.now())
