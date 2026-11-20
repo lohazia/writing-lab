@@ -607,7 +607,7 @@ function rvPoll(){
   var q=LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=rel&act="+ACT+"&id="+encodeURIComponent(liveKey(S.user))+"&t="+Date.now();
   fetch(q).then(function(r){return r.json();}).then(function(d){RV.busy=false;if(!d||!d.ok)return;var was=RV.open;RV.open=!!d.open;RV.decided=!!d.decided;RV.target=d.target;
     if(RV.open&&!RV.items)rvLoad();else if(was!==RV.open&&!RVV)render(true);}).catch(function(){RV.busy=false;});}
-function rvLoad(cb){fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=review&act="+ACT+"&t="+Date.now()).then(function(r){return r.json();}).then(function(d){
+function rvLoad(cb){fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=review&act="+ACT+"&id="+encodeURIComponent(liveKey(S.user))+"&t="+Date.now()).then(function(r){return r.json();}).then(function(d){
   if(!d||!d.ok){if(d&&d.error==="closed"){RV.open=false;render(true);}return;}RV.items=d.items||{};render(true);if(cb)cb();}).catch(function(){toast("정답을 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});}
 function rvBanner(){var r=rvs(),st=rvStat();
   return '<div class="peerbar" style="margin-bottom:14px"><b>'+(st===2?"맞춰 보기를 마쳤습니다."+(rvTarget()?" 오답 정리 PDF를 클래스룸에 내세요.":""):"선생님이 정답을 공개했습니다. 지난 시간 활동지를 맞춰 볼까요?")+'</b><div class="btns"><button class="btn pri" data-act="rvgo">'+(r&&r.started?"맞춰 보기 이어서 하기":"맞춰 보기 시작")+'</button></div></div>';}
@@ -658,12 +658,15 @@ document.addEventListener("input",function(e){var k=e.target.dataset&&e.target.d
   var n=rvNeed().length,b=document.querySelector('[data-act="rvpdf"]'),t=$("#rv-left");if(b)b.disabled=n>0;if(t)t.textContent=n?"아직 남은 것: "+n+"개 (○△× 점검, 틀린 까닭 쓰기)":"남은 것이 없습니다. PDF를 저장할 수 있습니다.";});
 document.addEventListener("focusout",function(e){if(e.target.dataset&&e.target.dataset.rvw&&RVV){var t=e.target.value;if(t&&junk(t))toast(junk(t));}});
 /* 교사용: 정답 공개와 수업 정리 화면 */
-function rvTBar(){return '<div class="card stack"><div class="head"><h2>다음 시간 · 맞춰 보기</h2><span class="meta">'+(LV.rel==null?"공개 상태 확인 중":LV.rel?"정답 공개 중":"정답 비공개")+'</span></div>'+
-  '<p class="lead">[정답 공개]를 누르면 학생 화면에 맞춰 보기가 열립니다. 수업이 끝나면 [공개 닫기]를 누르세요. 공개는 이 활동지를 쓰는 모든 반에 함께 적용됩니다.</p>'+
-  '<div class="btns"><button class="btn '+(LV.rel?"danger":"pri")+'" data-act="rvrel" data-v="'+(LV.rel?0:1)+'">'+(LV.rel?"공개 닫기":"정답 공개")+'</button><button class="btn" data-act="rvsum">'+(LV.sum?"수업 정리 화면 닫기":"수업 정리 화면")+'</button></div></div>';}
+function rvBans(){var b=[];(LV.rows||[]).forEach(function(r){if(r.ban&&b.indexOf(String(r.ban))<0)b.push(String(r.ban));});(LV.rel||[]).forEach(function(x){if(b.indexOf(x)<0)b.push(x);});return b.sort(function(x,y){return +x-+y;});}
+function rvTBar(){var on=LV.rel||[];return '<div class="card stack"><div class="head"><h2>다음 시간 · 맞춰 보기</h2><span class="meta">'+(LV.rel==null?"공개 상태 확인 중":on.length?"정답 공개 중: "+on.map(function(b){return b+"반";}).join(", "):"모든 반 정답 비공개")+'</span></div>'+
+  '<p class="lead">정답 공개는 <b>반마다 따로</b> 합니다. 수업하는 반의 [공개]를 누르면 그 반 학생 화면에만 맞춰 보기가 열립니다. 수업이 끝나면 [닫기]를 누르세요.</p>'+
+  '<div class="btns">'+rvBans().map(function(b){var o=on.indexOf(b)>=0;return '<button class="btn '+(o?"danger":"pri")+'" data-act="rvrel" data-b="'+esc(b)+'" data-v="'+(o?0:1)+'">'+esc(b)+'반 '+(o?"닫기":"공개")+'</button>';}).join("")+
+  '<input type="text" id="rv-ban" placeholder="다른 반" autocomplete="off" style="width:90px"><button class="btn" data-act="rvrel" data-v="1">이 반 공개</button><button class="btn" data-act="rvsum">'+(LV.sum?"수업 정리 화면 닫기":"수업 정리 화면")+'</button></div></div>';}
 function rvTag(r){var x=String(r.done||"").split("|")[1];x=x?x.split(","):[];var v=+(x[4]||0);return v===2?' <span class="chip static on" style="font-size:.75rem;padding:1px 8px">맞춰 보기 완료</span>':v===1?' <span class="chip static" style="font-size:.75rem;padding:1px 8px">맞춰 보기 중</span>':'';}
-function rvRel(){liveGet("action=rel").then(function(d){if(LV&&d&&d.ok){LV.rel=!!d.open;if(!viewState)render(true);}}).catch(function(){});}
-A.rvrel=function(d){liveGet("action=release&open="+d.v).then(function(r){if(!r||!r.ok)throw 0;LV.rel=!!r.open;render(true);toast(LV.rel?"정답을 공개했습니다. 학생 화면에 30초 안에 나타납니다.":"정답 공개를 닫았습니다.");}).catch(function(){toast("바꾸지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});};
+function rvRel(){liveGet("action=rels").then(function(d){if(LV&&d&&d.ok){LV.rel=d.open||[];if(!viewState)render(true);}}).catch(function(){});}
+A.rvrel=function(d){var b=String(d.b||(($("#rv-ban")||{}).value||"")).replace(/[^0-9]/g,"");if(!b){toast("공개할 반 번호를 적어 주세요.");return;}
+  liveGet("action=release&ban="+b+"&open="+d.v).then(function(r){if(!r||!r.ok)throw 0;LV.rel=r.open||[];render(true);toast(d.v==="1"?b+"반에 정답을 공개했습니다. 학생 화면에 30초 안에 나타납니다.":b+"반 정답 공개를 닫았습니다.");}).catch(function(){toast("바꾸지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});};
 A.rvsum=function(){if(LV.sum){LV.sum=null;render(true);return;}toast("학생 기록을 모으는 중입니다…");
   liveGet("action=all").then(function(r){if(!r||!r.ok)throw 0;var L=[];(r.rows||[]).forEach(function(x){try{var d=JSON.parse(x.data);if(valid(d))L.push(Object.assign(fresh(),d));}catch(e){}});
     return (RV.items?Promise.resolve():new Promise(function(ok){rvLoadT(ok);})).then(function(){LV.sum={list:L,k:LV.sumK||""};render();});}).catch(function(){toast("기록을 모으지 못했습니다.");});};
@@ -684,8 +687,19 @@ function rvSumView(){
    (sk?'<div class="fb good"><b>예시 답</b> '+esc(it.ex||"")+(it.tip?'<br><b>해설</b> '+esc(it.tip):'')+'</div><ol style="margin:0;padding-left:1.4em;line-height:1.7">'+ans.map(function(a){return '<li>'+esc(a)+'</li>';}).join("")+'</ol><p class="count">순서를 섞어 이름 없이 보여 줍니다. 좋은 답과 고칠 답을 골라 함께 이야기해 보세요.</p>':'<p class="count">문항을 고르면 학생들의 첫 답이 이름 없이 나옵니다.</p>')+'</div></div>';}
 document.addEventListener("change",function(e){if(e.target.id==="rv-sumk"&&LV&&LV.sum){LV.sum.k=LV.sumK=e.target.value;render(true);}});
 var _rvLive=liveView;liveView=function(){if(LV&&LV.key&&LV.sum)return rvSumView();var h=_rvLive();if(LV&&LV.key&&LIVE_URL&&!framed){if(LV.rel==null&&!LV.relAsk){LV.relAsk=1;setTimeout(rvRel,0);}h=h.replace('<div class="stack">','<div class="stack">'+rvTBar());}return h;};
-var _rvSheet=sheetHTML;sheetHTML=function(){return _rvSheet()+rvSheet();};
-var _rvRender=render;render=function(keep){_rvRender(keep);if(viewState||LV||T||!S.user)return;
+var _rvSheet=sheetHTML;sheetHTML=function(){return _rvSheet()+(S.moved?sec('<p class="cap">기록 옮김 · 처음에 '+esc(S.moved)+'(으)로 입력한 기록을 이 크롬북에서 옮겼습니다.</p>'):"")+rvSheet();};
+/* 잘못 입력한 반·번호·이름의 기록을 이 기기 안에서 바른 이름으로 옮기기 */
+var MIG=null;
+function rvCands(u){var out=[],me=ukey(u);try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||k.indexOf(PRE)!==0||k===PRE+"last"||k===me)continue;try{var d=JSON.parse(localStorage.getItem(k));if(valid(d))out.push({k:k,u:d.user,n:info(Object.assign(fresh(),d)).n});}catch(e){}}}catch(e){}return out;}
+var _rvReg=A.register;A.register=function(){var ok=$("#ack")&&$("#ack").checked,ban=(($("#r-ban")||{}).value||"").trim(),num=(($("#r-num")||{}).value||"").trim(),name=(($("#r-name")||{}).value||"").trim();
+  if(ok&&ban&&num&&name){var u={ban:ban,num:num,name:name};if(!lsGet(ukey(u))){var c=rvCands(u);if(c.length){MIG={u:u,c:c};render();return;}}}_rvReg();};
+function migView(){var u=MIG.u;return '<div class="stack"><div class="card stack"><div class="head"><h2>이 크롬북에 지난 기록이 있습니다</h2></div><p class="lead">지금 입력한 <b>'+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+'</b>(으)로 저장된 기록은 없지만, 이 크롬북에 아래 기록이 있습니다. 지난 시간에 반·번호·이름을 다르게 입력했다면 내 기록을 골라 옮기세요.</p>'+
+  MIG.c.map(function(c){return '<div class="q"><span class="lab">'+esc(c.u.ban)+'반 '+esc(c.u.num)+'번 '+esc(c.u.name)+' · 진행 '+c.n+'/'+STEPS.length+'단계</span><div class="btns"><button class="btn pri" data-act="migmove" data-k="'+esc(c.k)+'">내 기록입니다 · '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+'(으)로 옮기기</button></div></div>';}).join("")+
+  '<div class="btns"><button class="btn" data-act="mignew">내 기록이 아닙니다 · 새로 시작</button><button class="btn" data-act="migback">입력 다시 하기</button></div></div></div>';}
+A.migmove=function(d){var raw=lsGet(d.k),u=MIG.u;try{S=Object.assign(fresh(),JSON.parse(raw));}catch(e){toast("기록을 옮기지 못했습니다.");return;}S.user=u;S.moved=d.k.slice(PRE.length);MIG=null;saveNow();try{localStorage.removeItem(d.k);}catch(e){}render();toast("지난 기록을 "+u.ban+"반 "+u.num+"번 "+u.name+"(으)로 옮겼습니다.");setTimeout(liveSend,800);setTimeout(rvPoll,1200);};
+A.mignew=function(){var u=MIG.u;MIG=null;S=fresh();S.user=u;saveNow();render();};
+A.migback=function(){MIG=null;render();};
+var _rvRender=render;render=function(keep){_rvRender(keep);if(MIG&&!S.user&&!viewState&&!LV&&!T){$("#main").innerHTML=migView();return;}if(viewState||LV||T||!S.user)return;
   if(RVV){$("#nav").classList.add("hide");$("#main").innerHTML=rvView();if(!keep)window.scrollTo(0,0);}
   else if(RV.open)$("#main").insertAdjacentHTML("afterbegin",rvBanner());};
 setInterval(rvPoll,30000);setTimeout(rvPoll,1500);
