@@ -452,7 +452,7 @@ function unpackPDF(buf){var t=new TextDecoder("latin1").decode(buf),k=t.lastInde
 function valid(d){return d&&d.v===1&&d.user&&d.c&&d.w;}
 function makePDF(){
   if(typeof html2canvas!=="function"||!window.jspdf){toast("PDF 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로 고침 하세요.");return;}
-  var u=S.user,name="국어활동지29"+(S.rv&&S.rv.started?"_오답정리":"")+"_2학년"+u.ban+"반"+u.num+"번_"+u.name+(SOLO?"_혼자하기":"")+".pdf";
+  var u=S.user,name="국어활동지29_2학년"+u.ban+"반"+u.num+"번_"+u.name+(SOLO?"_혼자하기":"")+".pdf";
   var box=document.createElement("div");box.className="sheet shot";box.innerHTML=sheetHTML();document.body.appendChild(box);
   toast("PDF를 만드는 중입니다. 잠시 기다려 주세요.");
   var Wd=box.offsetWidth,kids=[].map.call(box.children,function(k){return [k.offsetTop,k.offsetTop+k.offsetHeight];});
@@ -598,8 +598,7 @@ function rvAuto(){var ck=rvCK().filter(function(k){var s=S.c[k];return s&&s.firs
 function rvTarget(){return RV.decided?!!RV.target:rvAuto();}
 function rvSnap(k){var r=rvs();return r&&r.snap&&r.snap[k]!=null?r.snap[k]:(S.w[k]||{}).a||"";}
 function rvNeed(){var r=rvs(),need=[];if(!r)return need;
-  rvMissedC().forEach(function(k){if(len(r.why["c:"+k])<8||junk(r.why["c:"+k]))need.push("c:"+k);});
-  rvWK().forEach(function(k){var m=r.mark[k];if(m==null)need.push("m:"+k);else if(m>0&&(len(r.why["w:"+k])<8||junk(r.why["w:"+k])))need.push("w:"+k);});
+  rvWK().forEach(function(k){if(r.mark[k]==null)need.push("m:"+k);});
   return need;}
 function rvStat(){var r=rvs();if(!r||!r.started)return 0;return rvNeed().length?1:2;}
 function rvPoll(){
@@ -610,45 +609,43 @@ function rvPoll(){
 function rvLoad(cb){fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=review&act="+ACT+"&id="+encodeURIComponent(liveKey(S.user))+"&t="+Date.now()).then(function(r){return r.json();}).then(function(d){
   if(!d||!d.ok){if(d&&d.error==="closed"){RV.open=false;render(true);}return;}RV.items=d.items||{};render(true);if(cb)cb();}).catch(function(){toast("정답을 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});}
 function rvBanner(){var r=rvs(),st=rvStat();
-  return '<div class="peerbar" style="margin-bottom:14px"><b>'+(st===2?"맞춰 보기를 마쳤습니다."+(rvTarget()?" 오답 정리 PDF를 클래스룸에 내세요.":""):"선생님이 정답을 공개했습니다. 지난 시간 활동지를 맞춰 볼까요?")+'</b><div class="btns"><button class="btn pri" data-act="rvgo">'+(r&&r.started?"맞춰 보기 이어서 하기":"맞춰 보기 시작")+'</button></div></div>';}
+  return '<div class="peerbar" style="margin-bottom:14px"><b>'+(st===2?"맞춰 보기를 마쳤습니다.":"선생님이 정답을 공개했습니다. 지난 시간 활동지를 맞춰 볼까요?")+'</b><div class="btns"><button class="btn pri" data-act="rvgo">'+(r&&r.started?"맞춰 보기 이어서 하기":"맞춰 보기 시작")+'</button></div></div>';}
 function rvItemC(k){var d=C[k],s=S.c[k]||{},r=rvs(),f=s.first,ok=f===d.a,miss=f!=null&&!ok;
   if(RVF==="wrong"&&!miss)return "";
   return '<div class="q"><span class="lab">'+esc(rvCL(k))+'</span><div class="chips">'+d.o.map(function(t,i){var cls=i===d.a?"on":i===f?"miss":"";return '<span class="chip static '+cls+'">'+(i===f?"내 첫 답 · ":"")+(i===d.a?"정답 · ":"")+esc(t)+'</span>';}).join("")+'</div>'+
    '<div class="fb '+(ok?"good":"bad")+'"><b>'+(f==null?"고르지 않았습니다.":ok?"처음부터 맞았습니다.":"처음에 틀렸습니다.")+'</b> '+esc(d.good||"")+'</div>'+
-   (miss?'<label class="f"><span>왜 처음 답을 골랐는지, 이제 어떻게 구별할지 한 줄로 써 보세요.</span><textarea data-rvw="c:'+k+'" rows="2" placeholder="나는 ○○라고 생각했는데, 사실은 …">'+esc(r.why["c:"+k]||"")+'</textarea></label>':'')+'</div>';}
+   '</div>';}
 function rvItemW(k){var it=(RV.items||{})[k]||{},r=rvs(),m=r.mark[k],a=rvSnap(k);
   if(RVF==="wrong"&&m===0)return "";
   return '<div class="q"><span class="lab">'+esc(rvWL(k))+'</span>'+
    '<table class="chk"><tr><th style="width:22%">내 첫 답</th><td>'+(a.trim()?esc(a):'<span class="bad">(쓰지 않음)</span>')+'</td></tr><tr><th>예시 답</th><td>'+esc(it.ex||"(예시 답을 불러오는 중)")+'</td></tr></table>'+
    (it.chk&&it.chk.length?'<div class="fb"><b>스스로 확인</b><br>'+it.chk.map(function(c){return "☐ "+esc(c);}).join("<br>")+'</div>':'')+
    (it.tip?'<div class="fb good"><b>해설</b> '+esc(it.tip)+'</div>':'')+
-   '<div class="chips"><span class="lab" style="align-self:center">내 첫 답은</span>'+[["○","핵심이 다 들어감"],["△","일부만 맞음"],["×","다시 써야 함"]].map(function(x,i){return '<button class="chip '+(m===i?(i?"miss":"on"):"")+'" data-act="rvmark" data-k="'+k+'" data-v="'+i+'">'+x[0]+' '+x[1]+'</button>';}).join("")+'</div>'+
-   (m>0?'<label class="f"><span>무엇이 빠졌거나 잘못되었는지, 고쳐 쓰면 어떻게 될지 써 보세요.</span><textarea data-rvw="w:'+k+'" rows="2" placeholder="빠진 것: … / 고쳐 쓰기: …">'+esc(r.why["w:"+k]||"")+'</textarea></label>':'')+'</div>';}
+   '<div class="chips"><span class="lab" style="align-self:center">내 첫 답은</span>'+[["○","핵심이 다 들어감"],["△","일부만 맞음"],["×","다시 써야 함"]].map(function(x,i){return '<button class="chip '+(m===i?(i?"miss":"on"):"")+'" data-act="rvmark" data-k="'+k+'" data-v="'+i+'">'+x[0]+' '+x[1]+'</button>';}).join("")+'</div></div>';}
 function rvView(){
   var r=rvs(),tg=rvTarget(),need=rvNeed(),ck=rvCK(),mc=rvMissedC(),first=ck.filter(function(k){var s=S.c[k];return s&&s.first===C[k].a;}).length;
   if(!RV.items)return '<div class="stack"><div class="card"><p class="lead">정답을 불러오는 중입니다…</p><div class="btns"><button class="btn" data-act="rvback">활동지로 돌아가기</button></div></div></div>';
   var cHTML=ck.map(rvItemC).join(""),wHTML=rvWK().map(rvItemW).join("");
   var zHTML=Object.keys(Z).map(function(k){var z=S.z[k]||{},D=Z[k],t="";D.parts.forEach(function(p,i){t+=esc(p)+(i<D.ans.length?'<b>'+esc(D.ans[i])+'</b>':'');});
     if(RVF==="wrong"&&!(z.n>0))return "";return '<div class="q"><span class="lab">빈칸 정리'+(z.n?' · <span class="bad">'+z.n+'번 틀림</span>':' · 한 번에 맞음')+'</span><p>'+t+'</p></div>';}).join("");
-  return '<div class="stack"><div class="card stack"><div class="head"><h2>맞춰 보기 · 오답 정리</h2><span class="meta">'+esc(ACT_TITLE)+'</span></div>'+
+  return '<div class="stack"><div class="card stack"><div class="head"><h2>맞춰 보기</h2><span class="meta">'+esc(ACT_TITLE)+'</span></div>'+
    '<p class="lead">지난 시간에 <b>처음 고르고 처음 쓴 답</b>을 정답·예시 답과 맞춰 봅니다. 고친 답이 아니라 처음 답으로 봅니다.</p>'+
-   '<div class="tiles"><div class="tile"><b>'+first+'/'+ck.length+'</b><span>고르는 문항 첫 시도 정답</span></div><div class="tile"><b>'+mc.length+'개</b><span>처음에 틀린 고르는 문항</span></div><div class="tile"><b>'+(need.length?need.length+"개 남음":"다 했음")+'</b><span>맞춰 보기</span></div></div>'+
-   '<div class="todo">'+(tg?'<b>오답 정리 PDF를 내는 학생입니다.</b> '+(RV.decided?'선생님이 정했습니다. ':'')+'맞춰 보기를 마치고 [오답 정리 PDF 저장]을 눌러 클래스룸 「오답 정리」 과제에 내세요.':'<b>오답 정리 PDF는 내지 않아도 됩니다.</b> 맞춰 보기만 끝까지 하세요. 틀린 문항이 있으면 까닭을 써 두면 좋습니다.')+'</div>'+
+   '<div class="tiles"><div class="tile"><b>'+first+'/'+ck.length+'</b><span>고르는 문항 첫 시도 정답</span></div><div class="tile"><b>'+mc.length+'개</b><span>처음에 틀린 고르는 문항</span></div><div class="tile"><b>'+(need.length?need.length+"개 남음":"다 했음")+'</b><span>쓰는 문항 점검</span></div></div>'+
+   '<div class="todo">고르는 문항은 정답과 해설을 읽어 보세요. 쓰는 문항은 내 첫 답을 예시 답과 비교해 ○△×로 점검하세요.</div>'+
    '<div class="chips"><button class="chip '+(RVF==="wrong"?"on":"")+'" data-act="rvf" data-v="wrong">틀린 것과 아직 점검하지 않은 것만</button><button class="chip '+(RVF==="all"?"on":"")+'" data-act="rvf" data-v="all">전체 보기</button></div></div>'+
    '<div class="card stack"><h2>1. 고르는 문항</h2>'+(cHTML||'<p class="lead">처음에 틀린 고르는 문항이 없습니다.</p>')+'</div>'+
    '<div class="card stack"><h2>2. 쓰는 문항</h2><p class="count">예시 답과 낱말이 달라도 핵심이 같으면 ○입니다. 스스로 확인 항목으로 판단하세요.</p>'+(wHTML||'<p class="lead">모두 ○로 점검했습니다.</p>')+'</div>'+
    ((zHTML||rvExtra())?'<div class="card stack"><h2>3. 빈칸과 분류</h2>'+zHTML+rvExtra()+'</div>':'')+
-   '<div class="card stack">'+(need.length?'<div class="todo" id="rv-left">아직 남은 것: '+need.length+'개 (○△× 점검, 틀린 까닭 쓰기)</div>':'<div class="fb good" style="font-size:.95rem"><b>맞춰 보기를 모두 마쳤습니다.</b></div>')+
-   '<div class="btns">'+(tg?'<button class="btn pri" data-act="rvpdf"'+(need.length?" disabled":"")+'>오답 정리 PDF 저장</button>':'<button class="btn" data-act="rvpdf"'+(need.length?" disabled":"")+'>오답 정리 PDF 저장 (내지 않아도 됨)</button>')+'<button class="btn" data-act="rvback">활동지로 돌아가기</button></div>'+
-   '<p class="count">맞춰 보기를 시작한 뒤에 활동지의 첫 답을 고치면 PDF에 따로 표시됩니다.</p></div></div>';}
+   '<div class="card stack">'+(need.length?'<div class="todo">아직 점검하지 않은 쓰는 문항: '+need.length+'개</div>':'<div class="fb good" style="font-size:.95rem"><b>맞춰 보기를 모두 마쳤습니다.</b></div>')+
+   '<div class="btns"><button class="btn" data-act="rvback">활동지로 돌아가기</button></div></div></div>';}
 function rvSheet(){var r=rvs();if(!r||!r.started)return "";
   var ck=rvCK(),mc=rvMissedC(),first=ck.filter(function(k){var s=S.c[k];return s&&s.first===C[k].a;}).length,MK=["○","△","×"],cnt=[0,0,0],chg=rvWK().filter(function(k){return r.snap&&r.snap[k]!=null&&String((S.w[k]||{}).a||"")!==String(r.snap[k]);}).length;
   rvWK().forEach(function(k){if(r.mark[k]!=null)cnt[r.mark[k]]++;});
-  var cr=mc.map(function(k){var s=S.c[k];return '<tr><td>'+esc(rvCL(k))+'</td><td>'+esc(C[k].o[s.first])+'</td><td>'+esc(C[k].o[C[k].a])+'</td><td>'+esc(r.why["c:"+k]||"-")+'</td></tr>';}).join("");
-  var wr=rvWK().filter(function(k){return r.mark[k]!==0;}).map(function(k){return '<tr><td>'+esc(rvWL(k))+'</td><td>'+esc(rvSnap(k)||"-")+'</td><td style="text-align:center">'+(r.mark[k]==null?"-":MK[r.mark[k]])+'</td><td>'+esc(r.why["w:"+k]||"-")+'</td></tr>';}).join("");
-  return sec('<h2>맞춰 보기 · 오답 정리</h2><p class="cap">고르는 문항 첫 시도 정답 '+first+'/'+ck.length+' · 쓰는 문항 스스로 점검 ○'+cnt[0]+' △'+cnt[1]+' ×'+cnt[2]+(rvStat()===2?' · 맞춰 보기 완료':' · 맞춰 보기 미완료')+(chg?' · 맞춰 보기 뒤 고친 첫 답 '+chg+'개':'')+'</p>'+
-   (cr?'<table><tr><th>처음에 틀린 고르는 문항</th><th>내 첫 답</th><th>정답</th><th>틀린 까닭 · 구별법</th></tr>'+cr+'</table>':'<p>고르는 문항은 처음부터 모두 맞았습니다.</p>')+
-   (wr?'<table style="margin-top:6px"><tr><th>쓰는 문항 (△·×)</th><th>내 첫 답</th><th>점검</th><th>빠진 것 · 고쳐 쓰기</th></tr>'+wr+'</table>':'<p>쓰는 문항은 모두 ○로 점검했습니다.</p>'));}
+  var cr=mc.map(function(k){var s=S.c[k];return '<tr><td>'+esc(rvCL(k))+'</td><td>'+esc(C[k].o[s.first])+'</td><td>'+esc(C[k].o[C[k].a])+'</td></tr>';}).join("");
+  var wr=rvWK().filter(function(k){return r.mark[k]!==0;}).map(function(k){return '<tr><td>'+esc(rvWL(k))+'</td><td>'+esc(rvSnap(k)||"-")+'</td><td style="text-align:center">'+(r.mark[k]==null?"-":MK[r.mark[k]])+'</td></tr>';}).join("");
+  return sec('<h2>맞춰 보기</h2><p class="cap">고르는 문항 첫 시도 정답 '+first+'/'+ck.length+' · 쓰는 문항 스스로 점검 ○'+cnt[0]+' △'+cnt[1]+' ×'+cnt[2]+(rvStat()===2?' · 맞춰 보기 완료':' · 맞춰 보기 미완료')+(chg?' · 맞춰 보기 뒤 고친 첫 답 '+chg+'개':'')+'</p>'+
+   (cr?'<table><tr><th>처음에 틀린 고르는 문항</th><th>내 첫 답</th><th>정답</th></tr>'+cr+'</table>':'<p>고르는 문항은 처음부터 모두 맞았습니다.</p>')+
+   (wr?'<table style="margin-top:6px"><tr><th>쓰는 문항 (△·×)</th><th>내 첫 답</th><th>점검</th></tr>'+wr+'</table>':'<p>쓰는 문항은 모두 ○로 점검했습니다.</p>'));}
 A.rvgo=function(){var r=rvs();if(!r){S.rv={started:Date.now(),snap:{},mark:{},why:{}};rvWK().forEach(function(k){S.rv.snap[k]=(S.w[k]||{}).a||"";});touch();}RVV=true;if(!RV.items)rvLoad();render();setTimeout(liveSend,800);};
 A.rvback=function(){RVV=false;render();};
 A.rvf=function(d){RVF=d.v;render(true);};
