@@ -515,7 +515,7 @@ function unpackPDF(buf){var t=new TextDecoder("latin1").decode(buf),k=t.lastInde
 function valid(d){return d&&d.v===1&&d.user&&d.c&&d.w&&d.sc;}
 function makePDF(){
   if(typeof html2canvas!=="function"||!window.jspdf){toast("PDF 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로 고침 하세요.");return;}
-  var u=S.user,name="국어활동지32_2학년"+u.ban+"반"+u.num+"번_"+u.name+".pdf";
+  var u=S.user,name="국어활동지32"+(S.rv&&S.rv.started?"_오답정리":"")+"_2학년"+u.ban+"반"+u.num+"번_"+u.name+".pdf";
   var box=document.createElement("div");box.className="sheet shot";box.innerHTML=sheetHTML();document.body.appendChild(box);
   toast("PDF를 만드는 중입니다. 잠시 기다려 주세요.");
   var Wd=box.offsetWidth,kids=[].map.call(box.children,function(k){return [k.offsetTop,k.offsetTop+k.offsetHeight];});
@@ -540,7 +540,7 @@ function liveKey(u){return ACT+":"+u.ban+"-"+u.num+"-"+u.name;}
 function liveSend(beacon){
   if(!LIVE_URL||framed||!S.user||T||LV||viewState)return;
   var p;try{var x=info(S),d=JSON.parse(JSON.stringify(S));
-    p=JSON.stringify({action:"save",key:liveKey(S.user),ban:S.user.ban,num:S.user.num,name:S.user.name,step:S.step,done:x.done.map(function(v){return v?"1":"0";}).join("")+"|"+(function(f){return [f.p,f.a,Math.round(f.ams/1000),f.b].join(",");})(flagsOf(S)),chars:Object.keys(S.w).reduce(function(a,k){return a+len(S.w[k].a);},0),mats:x.first,noSrc:x.miss,data:JSON.stringify(d)});}catch(e){return;}
+    p=JSON.stringify({action:"save",key:liveKey(S.user),ban:S.user.ban,num:S.user.num,name:S.user.name,step:S.step,done:x.done.map(function(v){return v?"1":"0";}).join("")+"|"+(function(f){return [f.p,f.a,Math.round(f.ams/1000),f.b,rvStat()].join(",");})(flagsOf(S)),chars:Object.keys(S.w).reduce(function(a,k){return a+len(S.w[k].a);},0),mats:x.first,noSrc:x.miss,data:JSON.stringify(d)});}catch(e){return;}
   if(p===liveLast)return;liveLast=p;
   if(beacon===true){try{navigator.sendBeacon(LIVE_URL,new Blob([p],{type:"text/plain;charset=utf-8"}));}catch(e){}return;}
   fetch(LIVE_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:p}).then(function(){if(liveOk!==true){liveOk=true;renderWho();}}).catch(function(){liveLast="";if(liveOk!==false){liveOk=false;renderWho();}});
@@ -569,7 +569,7 @@ function liveView(){
   var fl=function(r){var x=String(r.done||"").split("|")[1];x=x?x.split(",").map(Number):[0,0,0,0];return {p:x[0]||0,a:x[1]||0,ams:(x[2]||0)*1000,b:x[3]||0};};
   var flagged=L.filter(function(r){var f=fl(r);return f.p||f.a||f.b;}).length;
   var rows=L.map(function(r){var q=now-r.updated,st=now-r.stepSince,dn=String(r.done||"").split("|")[0],ft=flagText(fl(r));
-    return '<tr><td class="num">'+esc(r.ban)+'-'+esc(r.num)+'</td><td>'+esc(r.name)+'</td><td>'+r.step+'. '+esc((STEPS[r.step]||{}).t||"")+(st>600000?' <span class="bad">'+Math.floor(st/60000)+'분째</span>':'')+'</td><td><span class="prog">'+STEPS.map(function(_,i){return '<i class="'+(dn.charAt(i)==="1"?"on":"")+'"></i>';}).join("")+'</span></td><td class="num">'+r.mats+'</td><td class="num'+(r.noSrc>=12?" bad":"")+'">'+r.noSrc+'</td><td class="num">'+r.chars+'</td><td class="'+(q>180000?"bad":"")+'">'+ago(q)+'</td><td class="'+(ft?"bad":"")+'" style="font-size:.82rem">'+(ft?esc(ft):"-")+'</td><td><button class="btn sm" data-act="lview" data-id="'+esc(r.key)+'">보기</button></td></tr>';}).join("");
+    return '<tr><td class="num">'+esc(r.ban)+'-'+esc(r.num)+'</td><td>'+esc(r.name)+'</td><td>'+r.step+'. '+esc((STEPS[r.step]||{}).t||"")+rvTag(r)+(st>600000?' <span class="bad">'+Math.floor(st/60000)+'분째</span>':'')+'</td><td><span class="prog">'+STEPS.map(function(_,i){return '<i class="'+(dn.charAt(i)==="1"?"on":"")+'"></i>';}).join("")+'</span></td><td class="num">'+r.mats+'</td><td class="num'+(r.noSrc>=12?" bad":"")+'">'+r.noSrc+'</td><td class="num">'+r.chars+'</td><td class="'+(q>180000?"bad":"")+'">'+ago(q)+'</td><td class="'+(ft?"bad":"")+'" style="font-size:.82rem">'+(ft?esc(ft):"-")+'</td><td><button class="btn sm" data-act="lview" data-id="'+esc(r.key)+'">보기</button></td></tr>';}).join("");
   return '<div class="stack"><div class="card stack">'+top+(LV.err?'<div class="todo">'+esc(LV.err)+'</div>':'')+
     '<div class="btns">'+(bans.length>1?'<label for="lv-ban" style="font-size:.9rem">반</label><select id="lv-ban" style="width:auto"><option value="">전체</option>'+bans.map(function(b){return '<option value="'+esc(b)+'"'+(LV.filter===b?" selected":"")+'>'+esc(b)+'반</option>';}).join("")+'</select>':'')+'<button class="btn" data-act="lrefresh">지금 새로 읽기</button><button class="btn danger" data-act="lclear">'+(LV.arm?"정말 지울까요? 한 번 더 누르면 이 활동지의 실시간 기록을 지웁니다":"이 활동지 실시간 기록 지우기")+'</button><button class="btn" data-act="lclose">닫기</button></div>'+
     '<div class="tiles"><div class="tile"><b>'+L.length+'명</b><span>참여</span></div><div class="tile"><b>'+idle+'명</b><span>3분 넘게 입력 없음</span></div><div class="tile"><b>'+L.filter(function(r){return r.noSrc>=12;}).length+'명</b><span>많이 틀리는 중</span></div><div class="tile"><b>'+flagged+'명</b><span>붙여 넣기·창 이동·한꺼번에 입력</span></div></div>'+
@@ -587,7 +587,7 @@ var A={
     if(!LIVE_URL||framed){toast("예시 답은 웹에 올린 주소에서만 볼 수 있습니다.");return;}
     openBusy=true;var b=$("#ob-"+k);if(b){b.disabled=true;b.textContent="예시 답 불러오는 중…";}
     fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=ex&act="+ACT+"&k="+encodeURIComponent(k)+"&id="+encodeURIComponent(liveKey(S.user))+"&a="+encodeURIComponent(w.a.slice(0,300))+"&t="+Date.now())
-    .then(function(r){return r.json();}).then(function(r){openBusy=false;if(!r||!r.ok||!r.ex)throw 0;w.ex=r.ex;w.open=true;w.b=w.a;touch();render(true);setTimeout(liveSend,500);})
+    .then(function(r){return r.json();}).then(function(r){openBusy=false;if(!r||!r.ok||!r.ex)throw 0;w.ex=r.ex;w.open=true;if(S.rv&&S.rv.started)w.late=1;w.b=w.a;touch();render(true);setTimeout(liveSend,500);})
     .catch(function(){openBusy=false;toast("예시 답을 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.");render(true);});},
   rate:function(d){ws(d.k).r=+d.v;touch();render(true);},
   zb:function(d){var z=zs(d.k),D=Z[d.k];if(d.w===D.ans[z.i]){z.i++;z.off=[];}else{z.n++;z.off.push(d.w);}touch();render(true);},
@@ -648,6 +648,115 @@ document.addEventListener("change",function(e){if(e.target.id==="lv-ban"&&LV){LV
 document.addEventListener("change",function(e){if(e.target.id==="ack"){var b=$("#regbtn");if(b)b.disabled=!e.target.checked;}});
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="lv-key"){e.preventDefault();A.lstart();}if(e.key==="Enter"&&e.target.id==="t-key"){e.preventDefault();A.tsheet();}});
 document.addEventListener("contextmenu",function(e){if(e.target.closest(".tbp"))e.preventDefault();});
+/* 맞춰 보기 설정 · 활동지(32) */
+function rvKeys(){var c=[],w=[];for(var j=1;j<=LAST;j++)itemsOf(j).forEach(function(k){if(C[k]&&c.indexOf(k)<0)c.push(k);if(W[k]&&w.indexOf(k)<0)w.push(k);});return {c:c,w:w};}
+function rvMat(k){var m=k.slice(-1);return MAT[m]&&/^[pswixveg][A-D]$/.test(k)?"자료 "+m+" "+MAT[m].n:"";}
+function rvCL(k){if(C[k].q)return C[k].q;var m=rvMat(k);return m+(k.charAt(0)==="p"?" · 만든 목적":" · 고정 관념이 있나?");}
+function rvWL(k){var m=rvMat(k);if(k.charAt(0)==="g")return m+" · 모둠 친구 설명 듣고 의도와 관점 한 줄";return (m?m+" · ":"")+W[k].l;}
+function rvExtra(){if(S.scFirst==null)return "";return '<div class="q"><span class="lab">게시물 장면 고르기 · 첫 확인 때 맞은 장면 '+S.scFirst+'/'+NSC+' · 확인 '+S.scTry+'번</span><p>게시한 사람이 드러내려는 생각에 맞는 장면은 <b>선택</b>되고, 맞지 않는 장면은 <b>배제</b>됩니다.</p></div>';}
+function rvSumExtra(L){var t=L.filter(function(s){return s.scFirst!=null;});if(!t.length)return "";return '<p class="count">장면 고르기: 첫 확인 때 평균 '+(t.reduce(function(a,s){return a+s.scFirst;},0)/t.length).toFixed(1)+'/'+NSC+'개 맞음</p>';}
+/* ---------- 맞춰 보기 · 오답 정리 (다음 시간 시작에 선생님이 정답을 공개하면 열림) ---------- */
+var RV={open:false,items:null,target:null,decided:false,busy:false,at:0},RVV=false,RVF="wrong";
+function rvs(){return S.rv||null;}
+function rvCK(){return rvKeys().c;}
+function rvWK(){return rvKeys().w;}
+function rvMissedC(st){st=st||S;return rvCK().filter(function(k){var s=st.c[k];return s&&s.first!==null&&s.first!==undefined&&s.first!==C[k].a;});}
+function rvAuto(){var ck=rvCK().filter(function(k){var s=S.c[k];return s&&s.first!==null&&s.first!==undefined;}),m=rvMissedC().length,inc=STEPS.some(function(_,i){return missing(i).length>0;});
+  return inc||(ck.length&&m/ck.length>=0.3)||(!ck.length);}
+function rvTarget(){return RV.decided?!!RV.target:rvAuto();}
+function rvSnap(k){var r=rvs();return r&&r.snap&&r.snap[k]!=null?r.snap[k]:(S.w[k]||{}).a||"";}
+function rvNeed(){var r=rvs(),need=[];if(!r)return need;
+  rvMissedC().forEach(function(k){if(len(r.why["c:"+k])<8||junk(r.why["c:"+k]))need.push("c:"+k);});
+  rvWK().forEach(function(k){var m=r.mark[k];if(m==null)need.push("m:"+k);else if(m>0&&(len(r.why["w:"+k])<8||junk(r.why["w:"+k])))need.push("w:"+k);});
+  return need;}
+function rvStat(){var r=rvs();if(!r||!r.started)return 0;return rvNeed().length?1:2;}
+function rvPoll(){
+  if(!LIVE_URL||framed||!S.user||T||LV||viewState||RV.busy)return;RV.busy=true;
+  var q=LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=rel&act="+ACT+"&id="+encodeURIComponent(liveKey(S.user))+"&t="+Date.now();
+  fetch(q).then(function(r){return r.json();}).then(function(d){RV.busy=false;if(!d||!d.ok)return;var was=RV.open;RV.open=!!d.open;RV.decided=!!d.decided;RV.target=d.target;
+    if(RV.open&&!RV.items)rvLoad();else if(was!==RV.open&&!RVV)render(true);}).catch(function(){RV.busy=false;});}
+function rvLoad(cb){fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=review&act="+ACT+"&t="+Date.now()).then(function(r){return r.json();}).then(function(d){
+  if(!d||!d.ok){if(d&&d.error==="closed"){RV.open=false;render(true);}return;}RV.items=d.items||{};render(true);if(cb)cb();}).catch(function(){toast("정답을 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});}
+function rvBanner(){var r=rvs(),st=rvStat();
+  return '<div class="peerbar" style="margin-bottom:14px"><b>'+(st===2?"맞춰 보기를 마쳤습니다."+(rvTarget()?" 오답 정리 PDF를 클래스룸에 내세요.":""):"선생님이 정답을 공개했습니다. 지난 시간 활동지를 맞춰 볼까요?")+'</b><div class="btns"><button class="btn pri" data-act="rvgo">'+(r&&r.started?"맞춰 보기 이어서 하기":"맞춰 보기 시작")+'</button></div></div>';}
+function rvItemC(k){var d=C[k],s=S.c[k]||{},r=rvs(),f=s.first,ok=f===d.a,miss=f!=null&&!ok;
+  if(RVF==="wrong"&&!miss)return "";
+  return '<div class="q"><span class="lab">'+esc(rvCL(k))+'</span><div class="chips">'+d.o.map(function(t,i){var cls=i===d.a?"on":i===f?"miss":"";return '<span class="chip static '+cls+'">'+(i===f?"내 첫 답 · ":"")+(i===d.a?"정답 · ":"")+esc(t)+'</span>';}).join("")+'</div>'+
+   '<div class="fb '+(ok?"good":"bad")+'"><b>'+(f==null?"고르지 않았습니다.":ok?"처음부터 맞았습니다.":"처음에 틀렸습니다.")+'</b> '+esc(d.good||"")+'</div>'+
+   (miss?'<label class="f"><span>왜 처음 답을 골랐는지, 이제 어떻게 구별할지 한 줄로 써 보세요.</span><textarea data-rvw="c:'+k+'" rows="2" placeholder="나는 ○○라고 생각했는데, 사실은 …">'+esc(r.why["c:"+k]||"")+'</textarea></label>':'')+'</div>';}
+function rvItemW(k){var it=(RV.items||{})[k]||{},r=rvs(),m=r.mark[k],a=rvSnap(k);
+  if(RVF==="wrong"&&m===0)return "";
+  return '<div class="q"><span class="lab">'+esc(rvWL(k))+'</span>'+
+   '<table class="chk"><tr><th style="width:22%">내 첫 답</th><td>'+(a.trim()?esc(a):'<span class="bad">(쓰지 않음)</span>')+'</td></tr><tr><th>예시 답</th><td>'+esc(it.ex||"(예시 답을 불러오는 중)")+'</td></tr></table>'+
+   (it.chk&&it.chk.length?'<div class="fb"><b>스스로 확인</b><br>'+it.chk.map(function(c){return "☐ "+esc(c);}).join("<br>")+'</div>':'')+
+   (it.tip?'<div class="fb good"><b>해설</b> '+esc(it.tip)+'</div>':'')+
+   '<div class="chips"><span class="lab" style="align-self:center">내 첫 답은</span>'+[["○","핵심이 다 들어감"],["△","일부만 맞음"],["×","다시 써야 함"]].map(function(x,i){return '<button class="chip '+(m===i?(i?"miss":"on"):"")+'" data-act="rvmark" data-k="'+k+'" data-v="'+i+'">'+x[0]+' '+x[1]+'</button>';}).join("")+'</div>'+
+   (m>0?'<label class="f"><span>무엇이 빠졌거나 잘못되었는지, 고쳐 쓰면 어떻게 될지 써 보세요.</span><textarea data-rvw="w:'+k+'" rows="2" placeholder="빠진 것: … / 고쳐 쓰기: …">'+esc(r.why["w:"+k]||"")+'</textarea></label>':'')+'</div>';}
+function rvView(){
+  var r=rvs(),tg=rvTarget(),need=rvNeed(),ck=rvCK(),mc=rvMissedC(),first=ck.filter(function(k){var s=S.c[k];return s&&s.first===C[k].a;}).length;
+  if(!RV.items)return '<div class="stack"><div class="card"><p class="lead">정답을 불러오는 중입니다…</p><div class="btns"><button class="btn" data-act="rvback">활동지로 돌아가기</button></div></div></div>';
+  var cHTML=ck.map(rvItemC).join(""),wHTML=rvWK().map(rvItemW).join("");
+  var zHTML=Object.keys(Z).map(function(k){var z=S.z[k]||{},D=Z[k],t="";D.parts.forEach(function(p,i){t+=esc(p)+(i<D.ans.length?'<b>'+esc(D.ans[i])+'</b>':'');});
+    if(RVF==="wrong"&&!(z.n>0))return "";return '<div class="q"><span class="lab">빈칸 정리'+(z.n?' · <span class="bad">'+z.n+'번 틀림</span>':' · 한 번에 맞음')+'</span><p>'+t+'</p></div>';}).join("");
+  return '<div class="stack"><div class="card stack"><div class="head"><h2>맞춰 보기 · 오답 정리</h2><span class="meta">'+esc(ACT_TITLE)+'</span></div>'+
+   '<p class="lead">지난 시간에 <b>처음 고르고 처음 쓴 답</b>을 정답·예시 답과 맞춰 봅니다. 고친 답이 아니라 처음 답으로 봅니다.</p>'+
+   '<div class="tiles"><div class="tile"><b>'+first+'/'+ck.length+'</b><span>고르는 문항 첫 시도 정답</span></div><div class="tile"><b>'+mc.length+'개</b><span>처음에 틀린 고르는 문항</span></div><div class="tile"><b>'+(need.length?need.length+"개 남음":"다 했음")+'</b><span>맞춰 보기</span></div></div>'+
+   '<div class="todo">'+(tg?'<b>오답 정리 PDF를 내는 학생입니다.</b> '+(RV.decided?'선생님이 정했습니다. ':'')+'맞춰 보기를 마치고 [오답 정리 PDF 저장]을 눌러 클래스룸 「오답 정리」 과제에 내세요.':'<b>오답 정리 PDF는 내지 않아도 됩니다.</b> 맞춰 보기만 끝까지 하세요. 틀린 문항이 있으면 까닭을 써 두면 좋습니다.')+'</div>'+
+   '<div class="chips"><button class="chip '+(RVF==="wrong"?"on":"")+'" data-act="rvf" data-v="wrong">틀린 것과 아직 점검하지 않은 것만</button><button class="chip '+(RVF==="all"?"on":"")+'" data-act="rvf" data-v="all">전체 보기</button></div></div>'+
+   '<div class="card stack"><h2>1. 고르는 문항</h2>'+(cHTML||'<p class="lead">처음에 틀린 고르는 문항이 없습니다.</p>')+'</div>'+
+   '<div class="card stack"><h2>2. 쓰는 문항</h2><p class="count">예시 답과 낱말이 달라도 핵심이 같으면 ○입니다. 스스로 확인 항목으로 판단하세요.</p>'+(wHTML||'<p class="lead">모두 ○로 점검했습니다.</p>')+'</div>'+
+   ((zHTML||rvExtra())?'<div class="card stack"><h2>3. 빈칸과 분류</h2>'+zHTML+rvExtra()+'</div>':'')+
+   '<div class="card stack">'+(need.length?'<div class="todo" id="rv-left">아직 남은 것: '+need.length+'개 (○△× 점검, 틀린 까닭 쓰기)</div>':'<div class="fb good" style="font-size:.95rem"><b>맞춰 보기를 모두 마쳤습니다.</b></div>')+
+   '<div class="btns">'+(tg?'<button class="btn pri" data-act="rvpdf"'+(need.length?" disabled":"")+'>오답 정리 PDF 저장</button>':'<button class="btn" data-act="rvpdf"'+(need.length?" disabled":"")+'>오답 정리 PDF 저장 (내지 않아도 됨)</button>')+'<button class="btn" data-act="rvback">활동지로 돌아가기</button></div>'+
+   '<p class="count">맞춰 보기를 시작한 뒤에 활동지의 첫 답을 고치면 PDF에 따로 표시됩니다.</p></div></div>';}
+function rvSheet(){var r=rvs();if(!r||!r.started)return "";
+  var ck=rvCK(),mc=rvMissedC(),first=ck.filter(function(k){var s=S.c[k];return s&&s.first===C[k].a;}).length,MK=["○","△","×"],cnt=[0,0,0],chg=rvWK().filter(function(k){return r.snap&&r.snap[k]!=null&&String((S.w[k]||{}).a||"")!==String(r.snap[k]);}).length;
+  rvWK().forEach(function(k){if(r.mark[k]!=null)cnt[r.mark[k]]++;});
+  var cr=mc.map(function(k){var s=S.c[k];return '<tr><td>'+esc(rvCL(k))+'</td><td>'+esc(C[k].o[s.first])+'</td><td>'+esc(C[k].o[C[k].a])+'</td><td>'+esc(r.why["c:"+k]||"-")+'</td></tr>';}).join("");
+  var wr=rvWK().filter(function(k){return r.mark[k]!==0;}).map(function(k){return '<tr><td>'+esc(rvWL(k))+'</td><td>'+esc(rvSnap(k)||"-")+'</td><td style="text-align:center">'+(r.mark[k]==null?"-":MK[r.mark[k]])+'</td><td>'+esc(r.why["w:"+k]||"-")+'</td></tr>';}).join("");
+  return sec('<h2>맞춰 보기 · 오답 정리</h2><p class="cap">고르는 문항 첫 시도 정답 '+first+'/'+ck.length+' · 쓰는 문항 스스로 점검 ○'+cnt[0]+' △'+cnt[1]+' ×'+cnt[2]+(rvStat()===2?' · 맞춰 보기 완료':' · 맞춰 보기 미완료')+(chg?' · 맞춰 보기 뒤 고친 첫 답 '+chg+'개':'')+'</p>'+
+   (cr?'<table><tr><th>처음에 틀린 고르는 문항</th><th>내 첫 답</th><th>정답</th><th>틀린 까닭 · 구별법</th></tr>'+cr+'</table>':'<p>고르는 문항은 처음부터 모두 맞았습니다.</p>')+
+   (wr?'<table style="margin-top:6px"><tr><th>쓰는 문항 (△·×)</th><th>내 첫 답</th><th>점검</th><th>빠진 것 · 고쳐 쓰기</th></tr>'+wr+'</table>':'<p>쓰는 문항은 모두 ○로 점검했습니다.</p>'));}
+A.rvgo=function(){var r=rvs();if(!r){S.rv={started:Date.now(),snap:{},mark:{},why:{}};rvWK().forEach(function(k){S.rv.snap[k]=(S.w[k]||{}).a||"";});touch();}RVV=true;if(!RV.items)rvLoad();render();setTimeout(liveSend,800);};
+A.rvback=function(){RVV=false;render();};
+A.rvf=function(d){RVF=d.v;render(true);};
+A.rvmark=function(d){rvs().mark[d.k]=+d.v;touch();render(true);setTimeout(liveSend,800);};
+A.rvpdf=function(){var n=rvNeed();if(n.length){toast("맞춰 보기를 먼저 끝내 주세요. 남은 것 "+n.length+"개");return;}var bad="";Object.keys(rvs().why).some(function(k){var t=rvs().why[k];if(t&&junk(t)){bad=junk(t);return true;}});if(bad){toast(bad);return;}quiet=true;makePDF();};
+document.addEventListener("input",function(e){var k=e.target.dataset&&e.target.dataset.rvw;if(!k||!rvs())return;rvs().why[k]=e.target.value;touch();
+  var n=rvNeed().length,b=document.querySelector('[data-act="rvpdf"]'),t=$("#rv-left");if(b)b.disabled=n>0;if(t)t.textContent=n?"아직 남은 것: "+n+"개 (○△× 점검, 틀린 까닭 쓰기)":"남은 것이 없습니다. PDF를 저장할 수 있습니다.";});
+document.addEventListener("focusout",function(e){if(e.target.dataset&&e.target.dataset.rvw&&RVV){var t=e.target.value;if(t&&junk(t))toast(junk(t));}});
+/* 교사용: 정답 공개와 수업 정리 화면 */
+function rvTBar(){return '<div class="card stack"><div class="head"><h2>다음 시간 · 맞춰 보기</h2><span class="meta">'+(LV.rel==null?"공개 상태 확인 중":LV.rel?"정답 공개 중":"정답 비공개")+'</span></div>'+
+  '<p class="lead">[정답 공개]를 누르면 학생 화면에 맞춰 보기가 열립니다. 수업이 끝나면 [공개 닫기]를 누르세요. 공개는 이 활동지를 쓰는 모든 반에 함께 적용됩니다.</p>'+
+  '<div class="btns"><button class="btn '+(LV.rel?"danger":"pri")+'" data-act="rvrel" data-v="'+(LV.rel?0:1)+'">'+(LV.rel?"공개 닫기":"정답 공개")+'</button><button class="btn" data-act="rvsum">'+(LV.sum?"수업 정리 화면 닫기":"수업 정리 화면")+'</button></div></div>';}
+function rvTag(r){var x=String(r.done||"").split("|")[1];x=x?x.split(","):[];var v=+(x[4]||0);return v===2?' <span class="chip static on" style="font-size:.75rem;padding:1px 8px">맞춰 보기 완료</span>':v===1?' <span class="chip static" style="font-size:.75rem;padding:1px 8px">맞춰 보기 중</span>':'';}
+function rvRel(){liveGet("action=rel").then(function(d){if(LV&&d&&d.ok){LV.rel=!!d.open;if(!viewState)render(true);}}).catch(function(){});}
+A.rvrel=function(d){liveGet("action=release&open="+d.v).then(function(r){if(!r||!r.ok)throw 0;LV.rel=!!r.open;render(true);toast(LV.rel?"정답을 공개했습니다. 학생 화면에 30초 안에 나타납니다.":"정답 공개를 닫았습니다.");}).catch(function(){toast("바꾸지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});};
+A.rvsum=function(){if(LV.sum){LV.sum=null;render(true);return;}toast("학생 기록을 모으는 중입니다…");
+  liveGet("action=all").then(function(r){if(!r||!r.ok)throw 0;var L=[];(r.rows||[]).forEach(function(x){try{var d=JSON.parse(x.data);if(valid(d))L.push(Object.assign(fresh(),d));}catch(e){}});
+    return (RV.items?Promise.resolve():new Promise(function(ok){rvLoadT(ok);})).then(function(){LV.sum={list:L,k:LV.sumK||""};render();});}).catch(function(){toast("기록을 모으지 못했습니다.");});};
+function rvLoadT(cb){liveGet("action=review").then(function(d){if(d&&d.ok)RV.items=d.items||{};cb();}).catch(function(){cb();});}
+function rvSumView(){
+  var L=LV.sum.list.filter(function(s){return !LV.filter||s.user.ban===LV.filter;}),n=L.length;
+  var stat={},cks=[];L.forEach(function(s){withState(s,function(){rvCK().forEach(function(k){if(cks.indexOf(k)<0)cks.push(k);var c=s.c[k];if(!c||c.first==null)return;var o=stat[k]||(stat[k]={n:0,ok:0,w:{}});o.n++;if(c.first===C[k].a)o.ok++;else o.w[c.first]=(o.w[c.first]||0)+1;});});});
+  var rows=cks.filter(function(k){return stat[k];}).sort(function(a,b){return stat[a].ok/stat[a].n-stat[b].ok/stat[b].n;}).map(function(k){var o=stat[k],p=Math.round(o.ok/o.n*100),top=Object.keys(o.w).sort(function(a,b){return o.w[b]-o.w[a];})[0];
+    return '<tr><td>'+esc(rvCL(k))+'</td><td class="num'+(p<60?" bad":"")+'">'+p+'% <span class="count">('+o.ok+'/'+o.n+')</span></td><td>'+esc(C[k].o[C[k].a])+'</td><td>'+(top!=null?esc(C[k].o[top])+' <span class="count">'+o.w[top]+'명</span>':'-')+'</td></tr>';}).join("");
+  var zr=Object.keys(Z).map(function(k){var t=0,m=0;L.forEach(function(s){var z=s.z[k];if(z){t++;m+=z.n||0;}});return '<span class="chip static">빈칸 '+k+' · 평균 '+(t?(m/t).toFixed(1):0)+'번 틀림</span>';}).join("");
+  var wk=[];L.forEach(function(s){withState(s,function(){rvWK().forEach(function(k){if(wk.indexOf(k)<0)wk.push(k);});});});
+  var sk=LV.sum.k&&wk.indexOf(LV.sum.k)>=0?LV.sum.k:"",it=(RV.items||{})[sk]||{};
+  var ans=sk?L.map(function(s){var w=s.w[sk];return w&&String(w.a||"").trim()?String(w.a).trim():"";}).filter(Boolean):[];
+  var hz=function(t){var h=7;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))%1000003;return h;};ans.sort(function(a,b){return hz(a)-hz(b);});
+  return '<div class="stack"><div class="card stack"><div class="head"><h2>수업 정리 화면 · '+esc(ACT_TITLE)+'</h2><span class="meta">'+(LV.filter?LV.filter+"반 · ":"")+n+'명의 기록 · 이름은 보이지 않습니다</span></div><div class="btns"><button class="btn" data-act="rvsum">닫기</button></div></div>'+
+   '<div class="card stack"><h2>고르는 문항 · 첫 시도 정답률이 낮은 순</h2><div class="tablebox"><table class="chk"><thead><tr><th>문항</th><th>첫 시도 정답률</th><th>정답</th><th>가장 많이 고른 오답</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="chips">'+zr+'</div>'+rvSumExtra(L)+'</div>'+
+   '<div class="card stack"><h2>쓰는 문항 · 학생들의 첫 답 모아 보기</h2><div class="btns"><select id="rv-sumk" style="width:auto"><option value="">문항 고르기</option>'+wk.map(function(k){return '<option value="'+k+'"'+(k===sk?" selected":"")+'>'+esc(rvWL(k))+'</option>';}).join("")+'</select></div>'+
+   (sk?'<div class="fb good"><b>예시 답</b> '+esc(it.ex||"")+(it.tip?'<br><b>해설</b> '+esc(it.tip):'')+'</div><ol style="margin:0;padding-left:1.4em;line-height:1.7">'+ans.map(function(a){return '<li>'+esc(a)+'</li>';}).join("")+'</ol><p class="count">순서를 섞어 이름 없이 보여 줍니다. 좋은 답과 고칠 답을 골라 함께 이야기해 보세요.</p>':'<p class="count">문항을 고르면 학생들의 첫 답이 이름 없이 나옵니다.</p>')+'</div></div>';}
+document.addEventListener("change",function(e){if(e.target.id==="rv-sumk"&&LV&&LV.sum){LV.sum.k=LV.sumK=e.target.value;render(true);}});
+var _rvLive=liveView;liveView=function(){if(LV&&LV.key&&LV.sum)return rvSumView();var h=_rvLive();if(LV&&LV.key&&LIVE_URL&&!framed){if(LV.rel==null&&!LV.relAsk){LV.relAsk=1;setTimeout(rvRel,0);}h=h.replace('<div class="stack">','<div class="stack">'+rvTBar());}return h;};
+var _rvSheet=sheetHTML;sheetHTML=function(){return _rvSheet()+rvSheet();};
+var _rvRender=render;render=function(keep){_rvRender(keep);if(viewState||LV||T||!S.user)return;
+  if(RVV){$("#nav").classList.add("hide");$("#main").innerHTML=rvView();if(!keep)window.scrollTo(0,0);}
+  else if(RV.open)$("#main").insertAdjacentHTML("afterbegin",rvBanner());};
+setInterval(rvPoll,30000);setTimeout(rvPoll,1500);
 setInterval(liveSend,20000);setTimeout(liveSend,3000);
 (function(){var k=lsGet(PRE+"last"),d=k&&lsGet(k);if(d){try{S=Object.assign(fresh(),JSON.parse(d));}catch(e){S=fresh();}}})();
 render();
