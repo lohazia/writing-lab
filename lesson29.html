@@ -410,8 +410,8 @@ function teacherView(){
   var L=T.list,I=L.map(info);
   var rows=L.map(function(s,i){var x=I[i],u=s.user;return '<tr><td class="num">'+esc(u.ban)+'-'+esc(u.num)+'</td><td>'+esc(u.name)+'</td><td>'+(SOLO_OF(s)?"혼자":"수업")+'</td><td><span class="prog">'+x.done.map(function(d){return '<i class="'+(d?"on":"")+'"></i>';}).join("")+'</span> '+x.n+'/8</td><td class="num">'+x.first+'/'+x.ctot+'</td><td class="num'+(x.miss>=12?" bad":"")+'">'+x.miss+'</td><td>'+x.rated+'</td><td class="num">'+x.rev+'/'+x.wtot+'</td><td class="num'+(x.avg<8?" bad":"")+'">'+x.avg+'</td><td style="font-size:.82rem" class="'+(flagText(flagsOf(s))?"bad":"")+'">'+(esc(flagText(flagsOf(s)))||"-")+'</td><td><button class="btn sm" data-act="tview" data-i="'+i+'">활동지 보기</button></td></tr>';}).join("");
   var fin=I.filter(function(x){return x.n===8;}).length;
-  return '<div class="stack"><div class="card stack"><div class="head"><h2>교사용 · 제출물 모아 보기</h2><span class="meta">불러온 내용은 이 화면에만 있고 저장되지 않습니다</span></div><p class="lead">학생들이 클래스룸에 제출한 PDF를 내려받아 한꺼번에 선택하세요. 수업용과 혼자 하기용 PDF를 함께 넣어도 됩니다.</p>'+
-   '<div class="btns"><button class="btn pri" data-act="tpick">PDF 여러 개 불러오기</button>'+(L.length?'<button class="btn" data-act="tcsv">표를 CSV로 저장</button><button class="btn" data-act="tclear">모두 비우기</button>':'')+'<button class="btn" data-act="tclose">닫기</button></div>'+(T.bad.length?'<div class="todo"><b>기록을 읽지 못한 파일 '+T.bad.length+'개</b> · '+T.bad.map(esc).join(", ")+'</div>':'')+'</div>'+
+  return '<div class="stack"><div class="card stack"><div class="head"><h2>교사용 · 제출물 모아 보기</h2><span class="meta">불러온 내용은 이 화면에만 있고 저장되지 않습니다</span></div><p class="lead">교사 비밀번호를 넣고 [클래스룸 제출물 불러오기]를 누르면 클래스룸에 낸 PDF를 내려받지 않고 바로 불러옵니다. 제출물은 한 시간마다 새로 모입니다. 내려받은 PDF를 직접 골라도 됩니다. 수업용과 혼자 하기용 PDF를 함께 넣어도 됩니다.</p>'+
+   '<div class="btns"><input type="text" id="t-key" placeholder="교사 비밀번호" autocomplete="off" style="width:150px" value="'+esc(T.key||"")+'"><button class="btn pri" data-act="tsheet">클래스룸 제출물 불러오기</button><button class="btn" data-act="tpick">PDF 파일 직접 고르기</button>'+(L.length?'<button class="btn" data-act="tcsv">표를 CSV로 저장</button><button class="btn" data-act="tclear">모두 비우기</button>':'')+'<button class="btn" data-act="tclose">닫기</button></div>'+(T.bad.length?'<div class="todo"><b>기록을 읽지 못한 파일 '+T.bad.length+'개</b> · '+T.bad.map(esc).join(", ")+'</div>':'')+'</div>'+
    (L.length?'<div class="card stack"><div class="tiles"><div class="tile"><b>'+L.length+'명</b><span>제출</span></div><div class="tile"><b>'+fin+'명</b><span>모든 단계 완료</span></div><div class="tile"><b>'+(I.reduce(function(a,x){return a+x.first/x.ctot;},0)/L.length*100).toFixed(0)+'%</b><span>고르는 문항 첫 시도 정답률</span></div><div class="tile"><b>'+I.filter(function(x){return x.avg<8;}).length+'명</b><span>첫 답이 매우 짧음</span></div></div>'+
     '<div class="tablebox"><table class="chk"><thead><tr><th>반-번호</th><th>이름</th><th>모드</th><th>진행</th><th>첫 시도 정답</th><th>틀린 횟수</th><th>자기 평가</th><th>고쳐 쓴 문항</th><th>첫 답 평균 글자</th><th>주의</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="count">진행 칸은 0~7단계 순서 · 자기 평가는 쓰는 문항 순서(◎ 잘함 ○ 보통 △ 노력 필요) · 틀린 횟수가 많거나 첫 답이 매우 짧으면 붉게 표시</p></div>':'<div class="card"><p class="lead">아직 불러온 제출물이 없습니다.</p></div>')+'</div>';
 }
@@ -544,6 +544,12 @@ var A={
   lclear:function(){if(!LV.arm){LV.arm=true;render(true);return;}LV.arm=false;liveGet("action=clear").then(function(){LV.rows=[];render(true);toast("실시간 기록을 지웠습니다.");}).catch(function(){toast("지우지 못했습니다.");});},
   tclose:function(){T=null;tIdx=-1;render();},
   tclear:function(){T={list:[],bad:[]};render();},
+  tsheet:function(){var k=(($("#t-key")||{}).value||"").trim();if(!k){toast("교사 비밀번호를 적어 주세요.");return;}if(!LIVE_URL){toast("웹 앱 주소가 없습니다.");return;}T.key=k;toast("클래스룸 제출물을 불러오는 중입니다…");
+    fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=subs&act="+ACT+"&key="+encodeURIComponent(k)+"&t="+Date.now()).then(function(r){return r.json();}).then(function(r){
+      if(!r||!r.ok){toast(r&&r.error==="key"?"비밀번호가 다릅니다.":"불러오지 못했습니다.");return;}
+      var n=0;(r.rows||[]).forEach(function(x){try{var d=JSON.parse(x.data);if(valid(d)){tAdd(Object.assign(fresh(),d));n++;}else T.bad.push(x.file);}catch(e){T.bad.push(x.file);}});
+      T.list.sort(function(a,b){return (+a.user.ban-+b.user.ban)||(+a.user.num-+b.user.num);});render();toast("클래스룸 제출물 "+n+"건을 불러왔습니다.");
+    }).catch(function(){toast("불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});},
   tpick:function(){var f=$("#multiPick");f.value="";f.click();},
   tview:function(d){tIdx=+d.i;viewState=T.list[tIdx];render();},
   tnav:function(d){var n=tIdx+(+d.d);if(n<0||n>=T.list.length)return;tIdx=n;viewState=T.list[n];render();},
@@ -573,7 +579,7 @@ document.addEventListener("change",function(e){var el=e.target;
 window.addEventListener("beforeunload",function(){if(!saved)saveNow();liveSend(true);});
 document.addEventListener("change",function(e){if(e.target.id==="lv-ban"&&LV){LV.filter=e.target.value;render(true);}});
 document.addEventListener("change",function(e){if(e.target.id==="ack"){var b=$("#regbtn");if(b)b.disabled=!e.target.checked;}});
-document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="lv-key"){e.preventDefault();A.lstart();}});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="lv-key"){e.preventDefault();A.lstart();}if(e.key==="Enter"&&e.target.id==="t-key"){e.preventDefault();A.tsheet();}});
 setInterval(liveSend,20000);setTimeout(liveSend,3000);
 (function(){var k=lsGet(PRE+"last"),d=k&&lsGet(k);if(d){try{S=Object.assign(fresh(),JSON.parse(d));}catch(e){S=fresh();}}})();
 render();
