@@ -656,14 +656,20 @@ document.addEventListener("input",function(e){var k=e.target.dataset&&e.target.d
 document.addEventListener("focusout",function(e){if(e.target.dataset&&e.target.dataset.rvw&&RVV){var t=e.target.value;if(t&&junk(t))toast(junk(t));}});
 /* 교사용: 정답 공개와 수업 정리 화면 */
 function rvBans(){var b=[];(LV.rows||[]).forEach(function(r){if(r.ban&&b.indexOf(String(r.ban))<0)b.push(String(r.ban));});(LV.rel||[]).forEach(function(x){if(b.indexOf(x)<0)b.push(x);});return b.sort(function(x,y){return +x-+y;});}
-function rvTBar(){var on=LV.rel||[];return '<div class="card stack"><div class="head"><h2>다음 시간 · 맞춰 보기</h2><span class="meta">'+(LV.rel==null?"공개 상태 확인 중":on.length?"정답 공개 중: "+on.map(function(b){return b+"반";}).join(", "):"모든 반 정답 비공개")+'</span></div>'+
-  '<p class="lead">정답 공개는 <b>반마다 따로</b> 합니다. 수업하는 반의 [공개]를 누르면 그 반 학생 화면에만 맞춰 보기가 열립니다. 수업이 끝나면 [닫기]를 누르세요.</p>'+
-  '<div class="btns">'+rvBans().map(function(b){var o=on.indexOf(b)>=0;return '<button class="btn '+(o?"danger":"pri")+'" data-act="rvrel" data-b="'+esc(b)+'" data-v="'+(o?0:1)+'">'+esc(b)+'반 '+(o?"닫기":"공개")+'</button>';}).join("")+
-  '<input type="text" id="rv-ban" placeholder="다른 반" autocomplete="off" style="width:90px"><button class="btn" data-act="rvrel" data-v="1">이 반 공개</button><button class="btn" data-act="rvsum">'+(LV.sum?"수업 정리 화면 닫기":"수업 정리 화면")+'</button></div></div>';}
+function rvEnded(){return (LV&&LV.ended)||{};}
+function rvNew(b){var t=rvEnded()[b];return t?(LV.rows||[]).filter(function(r){return String(r.ban)===b&&+r.updated>t;}).length:0;}
+function rvTBar(){var on=LV.rel||[],E=rvEnded(),bs=rvBans(),act=bs.filter(function(b){return !E[b];}),ended=bs.filter(function(b){return E[b];});
+  var pub=function(b){var o=on.indexOf(b)>=0;return '<button class="btn '+(o?"danger":"pri")+'" data-act="rvrel" data-b="'+esc(b)+'" data-v="'+(o?0:1)+'">'+(o?"정답 공개 닫기":"정답 공개")+'</button>';};
+  return '<div class="card stack"><div class="head"><h2>반별 관리 · 정답 공개와 수업 종료</h2><span class="meta">'+(LV.rel==null?"상태 확인 중":on.length?"정답 공개 중: "+on.map(function(b){return b+"반";}).join(", "):"모든 반 정답 비공개")+'</span></div>'+
+  '<p class="lead">정답 공개는 반마다 따로 합니다. 수업이 끝난 반은 [수업 종료]를 누르면 아래 표에서 접힙니다. 기록은 계속 저장되고, 그 반의 [정답 공개]를 누르면 다시 펼쳐집니다.</p>'+
+  act.map(function(b){return '<div class="btns"><b style="min-width:3.5em;align-self:center">'+esc(b)+'반</b>'+pub(b)+'<button class="btn" data-act="rvend" data-b="'+esc(b)+'" data-v="1">수업 종료</button></div>';}).join("")+
+  (ended.length?'<div class="btns" style="align-items:center"><span class="count">종료한 반</span>'+ended.map(function(b){var n=rvNew(b);return '<span class="chip static">'+esc(b)+'반'+(n?' · <span class="bad">새 기록 '+n+'명</span>':'')+'</span><button class="btn" data-act="rvend" data-b="'+esc(b)+'" data-v="0">다시 보기</button>'+pub(b);}).join("")+'</div>':'')+
+  '<div class="btns"><input type="text" id="rv-ban" placeholder="다른 반" autocomplete="off" style="width:90px"><button class="btn" data-act="rvrel" data-v="1">이 반 정답 공개</button><button class="btn" data-act="rvsum">'+(LV.sum?"수업 정리 화면 닫기":"수업 정리 화면")+'</button></div></div>';}
 function rvTag(r){var x=String(r.done||"").split("|")[1];x=x?x.split(","):[];var v=+(x[4]||0);return v===2?' <span class="chip static on" style="font-size:.75rem;padding:1px 8px">맞춰 보기 완료</span>':v===1?' <span class="chip static" style="font-size:.75rem;padding:1px 8px">맞춰 보기 중</span>':'';}
-function rvRel(){liveGet("action=rels").then(function(d){if(LV&&d&&d.ok){LV.rel=d.open||[];if(!viewState)render(true);}}).catch(function(){});}
+function rvRel(){liveGet("action=rels").then(function(d){if(LV&&d&&d.ok){LV.rel=d.open||[];LV.ended=d.ended||{};if(!viewState)render(true);}}).catch(function(){});}
+A.rvend=function(d){var b=String(d.b||"");if(!b)return;liveGet("action=end&ban="+b+"&on="+d.v).then(function(r){if(!r||!r.ok)throw 0;LV.ended=r.ended||{};if(d.v==="1"&&LV.filter===b)LV.filter="";render(true);if(!d.q)toast(d.v==="1"?b+"반을 접었습니다. 기록은 계속 저장됩니다.":b+"반을 다시 펼쳤습니다.");}).catch(function(){toast("바꾸지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});};
 A.rvrel=function(d){var b=String(d.b||(($("#rv-ban")||{}).value||"")).replace(/[^0-9]/g,"");if(!b){toast("공개할 반 번호를 적어 주세요.");return;}
-  liveGet("action=release&ban="+b+"&open="+d.v).then(function(r){if(!r||!r.ok)throw 0;LV.rel=r.open||[];render(true);toast(d.v==="1"?b+"반에 정답을 공개했습니다. 학생 화면에 30초 안에 나타납니다.":b+"반 정답 공개를 닫았습니다.");}).catch(function(){toast("바꾸지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});};
+  liveGet("action=release&ban="+b+"&open="+d.v).then(function(r){if(!r||!r.ok)throw 0;LV.rel=r.open||[];if(d.v==="1"&&rvEnded()[b])A.rvend({b:b,v:"0",q:1});render(true);toast(d.v==="1"?b+"반에 정답을 공개했습니다. 학생 화면에 30초 안에 나타납니다.":b+"반 정답 공개를 닫았습니다.");}).catch(function(){toast("바꾸지 못했습니다. 잠시 뒤 다시 눌러 주세요.");});};
 A.rvsum=function(){if(LV.sum){LV.sum=null;render(true);return;}toast("학생 기록을 모으는 중입니다…");
   liveGet("action=all").then(function(r){if(!r||!r.ok)throw 0;var L=[];(r.rows||[]).forEach(function(x){try{var d=JSON.parse(x.data);if(valid(d))L.push(Object.assign(fresh(),d));}catch(e){}});
     return (RV.items?Promise.resolve():new Promise(function(ok){rvLoadT(ok);})).then(function(){LV.sum={list:L,k:LV.sumK||""};render();});}).catch(function(){toast("기록을 모으지 못했습니다.");});};
@@ -683,7 +689,7 @@ function rvSumView(){
    '<div class="card stack"><h2>쓰는 문항 · 학생들의 첫 답 모아 보기</h2><div class="btns"><select id="rv-sumk" style="width:auto"><option value="">문항 고르기</option>'+wk.map(function(k){return '<option value="'+k+'"'+(k===sk?" selected":"")+'>'+esc(rvWL(k))+'</option>';}).join("")+'</select></div>'+
    (sk?'<div class="fb good"><b>예시 답</b> '+esc(it.ex||"")+(it.tip?'<br><b>해설</b> '+esc(it.tip):'')+'</div><ol style="margin:0;padding-left:1.4em;line-height:1.7">'+ans.map(function(a){return '<li>'+esc(a)+'</li>';}).join("")+'</ol><p class="count">순서를 섞어 이름 없이 보여 줍니다. 좋은 답과 고칠 답을 골라 함께 이야기해 보세요.</p>':'<p class="count">문항을 고르면 학생들의 첫 답이 이름 없이 나옵니다.</p>')+'</div></div>';}
 document.addEventListener("change",function(e){if(e.target.id==="rv-sumk"&&LV&&LV.sum){LV.sum.k=LV.sumK=e.target.value;render(true);}});
-var _rvLive=liveView;liveView=function(){if(LV&&LV.key&&LV.sum)return rvSumView();var h=_rvLive();if(LV&&LV.key&&LIVE_URL&&!framed){if(LV.rel==null&&!LV.relAsk){LV.relAsk=1;setTimeout(rvRel,0);}h=h.replace('<div class="stack">','<div class="stack">'+rvTBar());}return h;};
+var _rvLive=liveView;liveView=function(){if(LV&&LV.key&&LV.sum)return rvSumView();var full=LV&&LV.rows,E=rvEnded();if(full&&LV.key){LV.rows=full.filter(function(r){return !E[String(r.ban)];});if(LV.filter&&E[LV.filter])LV.filter="";}var h;try{h=_rvLive();}finally{if(full)LV.rows=full;}if(LV&&LV.key&&LIVE_URL&&!framed){if(LV.rel==null&&!LV.relAsk){LV.relAsk=1;setTimeout(rvRel,0);}h=h.replace('<div class="stack">','<div class="stack">'+rvTBar());}return h;};
 var _rvSheet=sheetHTML;sheetHTML=function(){return _rvSheet()+(S.moved?sec('<p class="cap">기록 옮김 · 처음에 '+esc(S.moved)+'(으)로 입력한 기록을 이 크롬북에서 옮겼습니다.</p>'):"")+rvSheet();};
 /* 잘못 입력한 반·번호·이름의 기록을 이 기기 안에서 바른 이름으로 옮기기 */
 var MIG=null;
