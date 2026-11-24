@@ -318,7 +318,7 @@ function missing(i){
   if(cn)m.push("고르는 문항 "+cn+"개");if(wn)m.push("써서 예시 답과 비교할 문항 "+wn+"개");if(rn)m.push("자기 평가 "+rn+"개");
   if(i===2&&zs("k1").i<5)m.push("개념 빈칸");
   if(i===4&&zs("k2").i<2)m.push("공통점 빈칸");
-  if(i===5){if(zs("k3").i<1)m.push("수업 정리 빈칸");if(!S.q3.trim())m.push("나의 질문 ③");if(len(S.reflect)<30)m.push("느낀 점 2줄 이상");}
+  if(i===5){if(zs("k3").i<1)m.push("수업 정리 빈칸");if(!S.q3.trim())m.push("나의 질문 ③");if(len(S.reflect)<RF_MIN)m.push("느낀 점 "+RF_MIN+"자 이상(지금 "+len(S.reflect)+"자)");else if(junk(S.reflect))m.push("느낀 점 다시 쓰기");}
   return m;
 }
 /* ---------- 문항 조각 ---------- */
@@ -431,7 +431,7 @@ V[5]=function(){
    '<div class="q"><b>개념 정리</b>'+clozeHTML("k3")+'</div>'+
    '<div class="q"><b>매체 자료를 볼 때 던질 질문</b><p>① 누가, 왜 만들었을까?<br>② 무엇을 선택하고 무엇을 배제했을까?</p><label class="f" for="f-q3"><span>③ 내 질문 <small>앞으로 매체 자료를 볼 때 스스로 던질 질문</small></span><input type="text" id="f-q3" data-bind="q3" value="'+esc(S.q3)+'" placeholder="예) 다른 관점의 자료는 어떻게 보여 줄까?"></label></div>'+
    '<div class="q"><b>단원 마무리 (211쪽) · ○, ×를 고르세요</b>'+["ox1","ox2","ox3","ox4"].map(function(k){return '<div class="oxrow"><span>'+esc(C[k].q)+'</span><div>'+choiceHTML(k)+'</div></div>';}).join("")+'</div>'+
-   '<label class="f" for="f-reflect"><span>오늘 활동을 통한 나의 느낀 점 <small>2줄 이상 · 새롭게 알게 된 점, 깨달은 점, 변화된 점, 나의 질문에 대한 답</small></span><textarea id="f-reflect" data-bind="reflect" rows="3" placeholder="예) 친구가 올린 사진이 그 사람의 하루 전부라고 생각했는데, 고른 장면만 보여 준다는 것을 알았다.">'+esc(S.reflect)+'</textarea></label></div>'+
+   '<label class="f" for="f-reflect"><span>오늘 활동을 통한 나의 느낀 점 <small>40자 이상(띄어쓰기 빼고) · 새롭게 알게 된 점, 깨달은 점, 변화된 점, 나의 질문에 대한 답</small></span><textarea id="f-reflect" data-bind="reflect" rows="3" placeholder="예) 친구가 올린 사진이 그 사람의 하루 전부라고 생각했는데, 고른 장면만 보여 준다는 것을 알았다.">'+esc(S.reflect)+'</textarea><span class="count" id="rf-cnt">'+rfCnt()+'</span></label></div>'+
    '<div class="card stack"><h3 style="font-size:1.15rem">저장하고 제출하기</h3>'+(all.length?'<div class="todo"><b>아직 남은 것</b><ul style="margin:4px 0 0;padding-left:20px">'+all.join("")+'</ul></div>':'<div class="ok">모든 단계를 마쳤습니다.</div>')+
    '<p class="lead">결과 PDF를 저장해 클래스룸에 올리세요. 이 PDF가 국어 활동지(32)입니다. 다 하지 못했다면 이 PDF를 첫 화면에서 불러와 이어서 할 수 있습니다.</p>'+
    '<div class="btns"><button class="btn pri" data-act="pdf">결과 PDF 저장</button><button class="btn" data-act="preview">활동지 미리 보기</button><button class="btn" data-act="import">저장한 PDF 불러오기</button><button class="btn danger" data-act="reset">'+(resetArm?"정말 지울까요? 한 번 더 누르면 지웁니다":"새로 시작")+'</button></div></div>'+todoBox(5)+foot(5)+'</div>';
@@ -655,6 +655,10 @@ function rvCL(k){if(C[k].q)return C[k].q;var m=rvMat(k);return m+(k.charAt(0)===
 function rvWL(k){var m=rvMat(k);if(k.charAt(0)==="g")return m+" · 모둠 친구 설명 듣고 의도와 관점 한 줄";return (m?m+" · ":"")+W[k].l;}
 function rvExtra(){if(S.scFirst==null)return "";return '<div class="q"><span class="lab">게시물 장면 고르기 · 첫 확인 때 맞은 장면 '+S.scFirst+'/'+NSC+' · 확인 '+S.scTry+'번</span><p>게시한 사람이 드러내려는 생각에 맞는 장면은 <b>선택</b>되고, 맞지 않는 장면은 <b>배제</b>됩니다.</p></div>';}
 function rvSumExtra(L){var t=L.filter(function(s){return s.scFirst!=null;});if(!t.length)return "";return '<p class="count">장면 고르기: 첫 확인 때 평균 '+(t.reduce(function(a,s){return a+s.scFirst;},0)/t.length).toFixed(1)+'/'+NSC+'개 맞음</p>';}
+/* 느낀 점: 띄어쓰기 빼고 40자 이상, 의미 없는 글자는 받지 않음 */
+var RF_MIN=40;
+function rfCnt(){var n=len(S.reflect),j=n?junk(S.reflect):"";return n<RF_MIN?"지금 "+n+"자 · "+(RF_MIN-n)+"자 더 써야 합니다 (띄어쓰기는 세지 않음)":j?j:"지금 "+n+"자 · 40자를 채웠습니다";}
+document.addEventListener("input",function(e){if(e.target.id==="f-reflect"){var c=$("#rf-cnt");if(c){c.textContent=rfCnt();c.style.color=(len(S.reflect)>=RF_MIN&&!junk(S.reflect))?"var(--accent,#1f6f4f)":"";}}});
 /* ---------- 맞춰 보기 · 오답 정리 (다음 시간 시작에 선생님이 정답을 공개하면 열림) ---------- */
 var RV={open:false,items:null,target:null,decided:false,busy:false,at:0},RVV=false,RVF="wrong";
 function rvs(){return S.rv||null;}

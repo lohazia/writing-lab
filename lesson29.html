@@ -274,7 +274,7 @@ function missing(i){
   if(cn)m.push("고르는 문항 "+cn+"개");if(wn)m.push("써서 예시 답과 비교할 문항 "+wn+"개");if(rn)m.push("자기 평가 "+rn+"개");
   if(i===2&&zs("k1").i<2)m.push("1~4문단 핵심 빈칸");
   if(i===6){if(!S.sortOk)m.push("전략 카드 분류");if(zs("k2").i<2)m.push("핵심 문장 빈칸");}
-  if(i===7){if(zs("k3").i<4)m.push("수업 정리 빈칸");if(len(S.reflect)<30)m.push("느낀 점 2줄 이상");}
+  if(i===7){if(zs("k3").i<4)m.push("수업 정리 빈칸");if(len(S.reflect)<RF_MIN)m.push("느낀 점 "+RF_MIN+"자 이상(지금 "+len(S.reflect)+"자)");else if(junk(S.reflect))m.push("느낀 점 다시 쓰기");}
   return m;
 }
 /* ---------- 문항 조각 ---------- */
@@ -370,7 +370,7 @@ V[7]=function(){
   var all=[];for(var i=0;i<7;i++){var m=missing(i);if(m.length)all.push('<li><b>'+i+'. '+STEPS[i].t+'</b> · '+m.map(esc).join(", ")+'</li>');}
   return '<div class="stack"><div class="card stack">'+head(7,"오늘 배운 내용을 정리하고 결과를 제출합니다.")+
    '<div class="q"><b>수업 정리</b>'+clozeHTML("k3")+'</div>'+
-   '<label class="f" for="f-reflect"><span>오늘 활동을 정리하고 느낀 점 <small>2줄 이상 · 새롭게 알게 된 점, 나의 질문에 대한 답</small></span><textarea id="f-reflect" data-bind="reflect" rows="3" placeholder="예) 글을 읽다 막히면 그냥 넘어갔는데, 가리키는 말은 앞부분을 다시 읽으면 된다는 것을 알았다.">'+esc(S.reflect)+'</textarea></label></div>'+
+   '<label class="f" for="f-reflect"><span>오늘 활동을 정리하고 느낀 점 <small>40자 이상(띄어쓰기 빼고) · 새롭게 알게 된 점, 나의 질문에 대한 답</small></span><textarea id="f-reflect" data-bind="reflect" rows="3" placeholder="예) 글을 읽다 막히면 그냥 넘어갔는데, 가리키는 말은 앞부분을 다시 읽으면 된다는 것을 알았다.">'+esc(S.reflect)+'</textarea><span class="count" id="rf-cnt">'+rfCnt()+'</span></label></div>'+
    '<div class="card stack"><h3 style="font-size:1.15rem">저장하고 제출하기</h3>'+(all.length?'<div class="todo"><b>아직 남은 것</b><ul style="margin:4px 0 0;padding-left:20px">'+all.join("")+'</ul></div>':'<div class="ok">모든 단계를 마쳤습니다.</div>')+
    '<p class="lead">결과 PDF를 저장해 클래스룸에 올리세요. 이 PDF가 국어 활동지(29)입니다. 다 하지 못했다면 이 PDF를 첫 화면에서 불러와 이어서 할 수 있습니다.</p>'+
    '<div class="btns"><button class="btn pri" data-act="pdf">결과 PDF 저장</button><button class="btn" data-act="preview">활동지 미리 보기</button><button class="btn" data-act="import">저장한 PDF 불러오기</button><button class="btn danger" data-act="reset">'+(resetArm?"정말 지울까요? 한 번 더 누르면 지웁니다":"새로 시작")+'</button></div></div>'+todoBox(7)+foot(7)+'</div>';
@@ -587,6 +587,10 @@ function rvCL(k){if(C[k].q)return C[k].q;var r=rvRow(k);return r?r.p+" · 사용
 function rvWL(k){var r=rvRow(k);return r?r.p+" · "+W[k].l:"요약 · "+W[k].l;}
 function rvExtra(){if(S.sortFirst==null)return "";return '<div class="q"><span class="lab">전략 카드 분류 · 첫 확인 때 맞은 카드 '+S.sortFirst+'/15 · 확인 '+S.sortTry+'번</span><p>두 칸에 들어가는 카드는 <b>예측하기</b>(읽기 전·읽기 중) 하나입니다. 읽기 중: 독서 환경 확인하기, 질문하기, 메모하기, 예측한 내용 확인하기, 추론하기 / 읽기 후: 요약하기, 주제 파악하기, 읽기 활동 평가하기 등.</p></div>';}
 function rvSumExtra(L){var t=L.filter(function(s){return s.sortFirst!=null;});if(!t.length)return "";return '<p class="count">전략 카드 분류: 첫 확인 때 평균 '+(t.reduce(function(a,s){return a+s.sortFirst;},0)/t.length).toFixed(1)+'/15장 맞음 · 15장 모두 맞은 학생 '+t.filter(function(s){return s.sortFirst===15;}).length+'명</p>';}
+/* 느낀 점: 띄어쓰기 빼고 40자 이상, 의미 없는 글자는 받지 않음 */
+var RF_MIN=40;
+function rfCnt(){var n=len(S.reflect),j=n?junk(S.reflect):"";return n<RF_MIN?"지금 "+n+"자 · "+(RF_MIN-n)+"자 더 써야 합니다 (띄어쓰기는 세지 않음)":j?j:"지금 "+n+"자 · 40자를 채웠습니다";}
+document.addEventListener("input",function(e){if(e.target.id==="f-reflect"){var c=$("#rf-cnt");if(c){c.textContent=rfCnt();c.style.color=(len(S.reflect)>=RF_MIN&&!junk(S.reflect))?"var(--accent,#1f6f4f)":"";}}});
 /* ---------- 맞춰 보기 · 오답 정리 (다음 시간 시작에 선생님이 정답을 공개하면 열림) ---------- */
 var RV={open:false,items:null,target:null,decided:false,busy:false,at:0},RVV=false,RVF="wrong";
 function rvs(){return S.rv||null;}
