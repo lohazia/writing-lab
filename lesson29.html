@@ -591,6 +591,9 @@ function rvSumExtra(L){var t=L.filter(function(s){return s.sortFirst!=null;});if
 var RF_MIN=40;
 function rfCnt(){var n=len(S.reflect),j=n?junk(S.reflect):"";return n<RF_MIN?"지금 "+n+"자 · "+(RF_MIN-n)+"자 더 써야 합니다 (띄어쓰기는 세지 않음)":j?j:"지금 "+n+"자 · 40자를 채웠습니다";}
 document.addEventListener("input",function(e){if(e.target.id==="f-reflect"){var c=$("#rf-cnt");if(c){c.textContent=rfCnt();c.style.color=(len(S.reflect)>=RF_MIN&&!junk(S.reflect))?"var(--accent,#1f6f4f)":"";}}});
+/* 학생: 반·번호·이름을 잘못 넣었을 때 스스로 고치기 (기록 옮기기 화면으로 이어짐) */
+var _rnWho=renderWho;renderWho=function(){_rnWho();if(S.user&&!T&&!LV&&!viewState&&!framed){var w=$("#who");if(w)w.insertAdjacentHTML("beforeend",'<span><button type="button" data-act="rename" style="border:0;background:none;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit">반·번호·이름 고치기</button></span>');}};
+A.rename=function(){clearTimeout(timer);saveNow();try{localStorage.removeItem(PRE+"last");}catch(e){}MIG=null;RVV=false;S=fresh();render();toast("바른 반·번호·이름을 넣고 [등록하고 시작하기]를 누르세요. 지금까지 한 내용은 옮길 수 있습니다.");};
 /* ---------- 맞춰 보기 · 오답 정리 (다음 시간 시작에 선생님이 정답을 공개하면 열림) ---------- */
 var RV={open:false,items:null,target:null,decided:false,busy:false,at:0},RVV=false,RVF="wrong";
 function rvs(){return S.rv||null;}
