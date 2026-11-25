@@ -374,7 +374,7 @@ var V=[];
 V[0]=function(){
   var u=S.user;
   var reg=u?'<div class="ok">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+' 분석가로 등록되었습니다.</div>'
-   :'<div class="row"><label class="f" for="r-ban"><span>반</span><input type="number" id="r-ban" min="1" max="20" inputmode="numeric"></label><label class="f" for="r-num"><span>번호</span><input type="number" id="r-num" min="1" max="40" inputmode="numeric"></label><label class="f" for="r-name"><span>이름</span><input type="text" id="r-name" autocomplete="off"></label></div><div class="btns"><button class="btn pri" data-act="register" id="regbtn" disabled>등록하고 시작하기</button><button class="btn" data-act="import">저장한 PDF 불러와 이어 하기</button></div>';
+   :'<div class="row"><label class="f" for="r-ban"><span>반</span><input type="number" id="r-ban" min="1" max="20" inputmode="numeric"></label><label class="f" for="r-num"><span>번호</span><input type="number" id="r-num" min="1" max="40" inputmode="numeric"></label><label class="f" for="r-name"><span>이름</span><input type="text" id="r-name" autocomplete="off"></label><label class="f" for="r-grp"><span>모둠</span><select id="r-grp">'+grpOpts("")+'</select></label></div><div class="btns"><button class="btn pri" data-act="register" id="regbtn" disabled>등록하고 시작하기</button><button class="btn" data-act="import">저장한 PDF 불러와 이어 하기</button></div>';
   return '<div class="stack"><div class="card stack">'+head(0,"사진과 광고는 현실을 그대로 옮긴 것처럼 보입니다. 오늘은 매체 자료 분석가가 되어, 화면 밖에 감춰진 것을 찾아봅니다. 활동 화면 옆에 교과서 쪽이 함께 열리니, 읽으면서 답하세요.")+
    '<div class="keyq">수업 핵심 질문 · 매체 자료가 보여 주는 모습은 현실 그대로일까?</div>'+noticeHTML(u)+reg+
    (u?'<label class="f" for="f-myQ"><span>★ 나의 질문 <small>오늘 수업에서 알고 싶은 것을 질문으로 써 보세요.</small></span><textarea id="f-myQ" data-bind="myQ" rows="2" placeholder="예) 광고는 왜 좋은 모습만 보여 줄까?">'+esc(S.myQ)+'</textarea></label>':'')+'</div>'+
@@ -447,7 +447,7 @@ function sheetHTML(){
   var a1='<table><tr><th></th>'+POSTS.map(function(p){return '<th>'+esc(p.n)+'</th>';}).join("")+'</tr><tr><th>선택한 장면</th>'+POSTS.map(function(p){return '<td>'+scAns(p,1)+'</td>';}).join("")+'</tr><tr><th>배제된 장면</th>'+POSTS.map(function(p){return '<td>'+scAns(p,0)+'</td>';}).join("")+'</tr><tr><th>드러내려는 생각</th>'+POSTS.map(function(p){return '<td>'+wAns(p.t)+'</td>';}).join("")+'</tr></table><p class="cap">장면 고르기 '+(S.scOk?"완료":"미완료")+' · 확인 '+S.scTry+'번'+(S.scFirst!==null?' · 첫 확인 때 맞은 장면 '+S.scFirst+'/'+NSC:'')+'</p><p>→ 세 게시물 모두 거짓은 없다. 왜 다르게 보일까?<br>'+wAns("why")+'</p>';
   var a2=m?(function(k){return '<p><b>내가 맡은 자료: '+m+' '+esc(MAT[m].n)+'</b> ('+MAT[m].pgt+')</p><table><tr><th>무엇을 위해 만들었나?</th><td>'+cAns(k.p)+'</td></tr>'+k.w.map(function(x){return '<tr><th>'+esc(W[x].l)+'</th><td>'+wAns(x)+'</td></tr>';}).join("")+'<tr><th>고정 관념이 있나?</th><td>'+cAns(k.s)+'</td></tr></table>';})(matKeys(m)):'<p>(맡은 자료를 고르지 않음)</p>';
   var a3='<table><tr><th>자료</th><th>의도와 관점 한 줄</th><th>고정 관념</th></tr>'+ML.map(function(x){return '<tr><th>'+x+' '+esc(MAT[x].n)+(x===m?' <small>(내 자료)</small>':'')+'</th><td>'+(x===m?esc(finalW("v"+x)||"-"):m?wAns("g"+x):"-")+'</td><td>'+(m?cAns("s"+x):"-")+'</td></tr>';}).join("")+'</table><p style="margin-top:6px">→ '+zAns("k2")+'</p><p>→ C와 D의 고정 관념에 계속 노출되면?<br>'+wAns("expo")+'</p>';
-  return sec('<h1>2학년 2학기 4단원 국어 활동지(32) · 사진 밖, 광고 속에 감춰진 것</h1><p class="cap">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+' · '+d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 · 4. 읽고 분석하고 (2) 현실을 재현하는 매체 자료</p>')+
+  return sec('<h1>2학년 2학기 4단원 국어 활동지(32) · 사진 밖, 광고 속에 감춰진 것</h1><p class="cap">2학년 '+esc(u.ban)+'반 '+esc(u.num)+'번 '+esc(u.name)+(S.grp?' · '+esc(S.grp)+'모둠':'')+' · '+d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 · 4. 읽고 분석하고 (2) 현실을 재현하는 매체 자료</p>')+
    sec('<h2>학습 활동 목표</h2><p>1. [수업 핵심 질문] 매체 자료가 보여 주는 모습은 현실 그대로일까?\n2. (★나의 질문) '+esc(S.myQ)+'</p>')+
    sec('<h2>활동 1 · 같은 하루, 같은 축제, 다른 게시물 (188~191쪽)</h2>'+a1)+
    sec('<h2>개념 정리 · 재현, 선택과 배제</h2><p>'+zAns("k1")+'</p><table>'+["c1","c2"].map(function(k){return '<tr><td>'+esc(C[k].q)+'</td><td style="width:40%">'+cAns(k)+'</td></tr>';}).join("")+'</table>')+
@@ -540,7 +540,7 @@ function liveKey(u){return ACT+":"+u.ban+"-"+u.num+"-"+u.name;}
 function liveSend(beacon){
   if(!LIVE_URL||framed||!S.user||T||LV||viewState)return;
   var p;try{var x=info(S),d=JSON.parse(JSON.stringify(S));
-    p=JSON.stringify({action:"save",key:liveKey(S.user),ban:S.user.ban,num:S.user.num,name:S.user.name,step:S.step,done:x.done.map(function(v){return v?"1":"0";}).join("")+"|"+(function(f){return [f.p,f.a,Math.round(f.ams/1000),f.b,rvStat()].join(",");})(flagsOf(S)),chars:Object.keys(S.w).reduce(function(a,k){return a+len(S.w[k].a);},0),mats:x.first,noSrc:x.miss,data:JSON.stringify(d)});}catch(e){return;}
+    p=JSON.stringify({action:"save",key:liveKey(S.user),ban:S.user.ban,num:S.user.num,name:S.user.name,step:S.step,done:x.done.map(function(v){return v?"1":"0";}).join("")+"|"+(function(f){return [f.p,f.a,Math.round(f.ams/1000),f.b,rvStat(),S.grp||"",S.jig||""].join(",");})(flagsOf(S)),chars:Object.keys(S.w).reduce(function(a,k){return a+len(S.w[k].a);},0),mats:x.first,noSrc:x.miss,data:JSON.stringify(d)});}catch(e){return;}
   if(p===liveLast)return;liveLast=p;
   if(beacon===true){try{navigator.sendBeacon(LIVE_URL,new Blob([p],{type:"text/plain;charset=utf-8"}));}catch(e){}return;}
   fetch(LIVE_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:p}).then(function(){if(liveOk!==true){liveOk=true;renderWho();}}).catch(function(){liveLast="";if(liveOk!==false){liveOk=false;renderWho();}});
@@ -784,6 +784,60 @@ var _rvRender=render;render=function(keep){_rvRender(keep);if(MIG&&!S.user&&!vie
   if(RVV){$("#nav").classList.add("hide");$("#main").innerHTML=rvView();if(!keep)window.scrollTo(0,0);}
   else if(RV.open)$("#main").insertAdjacentHTML("afterbegin",rvBanner());};
 setInterval(rvPoll,30000);setTimeout(rvPoll,1500);
+/* ---------- 모둠 (32차시 직소): 모둠 고르기, 우리 모둠이 고른 자료, 교사용 모둠별 표 ---------- */
+var GRP_MAX=9,GRP_PEND="",GRP={list:null,at:0,busy:false,key:""};
+/* 직소 규칙: 4명 이상이면 A~D 모두, 3명이면 A·B와 C·D 중 하나 (질문이 많은 A·B를 먼저 맡음) */
+function grpNeed(by,n){var need=n>=4?["A","B","C","D"]:n===3?["A","B"]:[],miss=need.filter(function(m){return !by[m].length;});if(n===3&&!by.C.length&&!by.D.length)miss.push("C·D");
+  var red={};ML.forEach(function(m){var cd=(m==="C"||m==="D")&&n===3;red[m]=(!by[m].length&&(need.indexOf(m)>=0||(cd&&!by.C.length&&!by.D.length)))||(by[m].length>1&&miss.length>0);});return {miss:miss,red:red};}
+function grpOpts(v){var h='<option value="">모둠 선택</option>';for(var i=1;i<=GRP_MAX;i++)h+='<option value="'+i+'"'+(String(v)===String(i)?" selected":"")+'>'+i+'모둠</option>';return h;}
+/* 등록: 모둠을 꼭 고르게 하고, 등록·기록 옮기기·새로 시작 뒤에 모둠을 넣는다 */
+var _gReg=A.register;A.register=function(){var g=$("#r-grp");if(g&&!g.value&&$("#ack")&&$("#ack").checked&&$("#r-ban").value.trim()&&$("#r-num").value.trim()&&$("#r-name").value.trim()){toast("모둠을 골라 주세요.");g.focus();return;}
+  GRP_PEND=g?g.value:"";_gReg();grpApply();};
+function grpApply(){if(S.user&&GRP_PEND){S.grp=GRP_PEND;GRP_PEND="";GRP.list=null;saveNow();render();setTimeout(liveSend,600);}}
+var _gMove=A.migmove;A.migmove=function(d){_gMove(d);grpApply();};
+var _gNew=A.mignew;A.mignew=function(){_gNew();grpApply();};
+var _gMiss=missing;missing=function(i){var m=_gMiss(i);if(i===0&&S.user&&!S.grp)m=m.concat(["모둠 고르기"]);return m;};
+/* 위쪽 이름 줄: 모둠 표시와 바꾸기 */
+var _gWho=renderWho;renderWho=function(){_gWho();if(!S.user||T||LV||viewState||framed)return;var w=$("#who");if(!w)return;
+  w.insertAdjacentHTML("afterbegin",'<span><select id="who-grp" aria-label="모둠" style="width:auto;padding:2px 6px;font:inherit'+(S.grp?'':';border-color:#c0392b')+'">'+grpOpts(S.grp)+'</select></span>');};
+document.addEventListener("change",function(e){if(e.target.id==="who-grp"){S.grp=e.target.value;GRP.list=null;touch();render(true);setTimeout(liveSend,600);if(S.grp)setTimeout(grpFetch,900);}});
+/* 우리 모둠이 고른 자료 (3·4단계) */
+function grpFetch(){if(!LIVE_URL||framed||!S.user||!S.grp||T||LV||viewState||GRP.busy)return;GRP.busy=true;
+  var q=LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=grp&act="+ACT+"&ban="+encodeURIComponent(S.user.ban)+"&grp="+encodeURIComponent(S.grp)+"&t="+Date.now();
+  fetch(q).then(function(r){return r.json();}).then(function(d){GRP.busy=false;if(!d||!d.ok)return;GRP.list=d.members||[];GRP.at=Date.now();grpPaint();}).catch(function(){GRP.busy=false;});}
+function grpMembers(){var me=liveKey(S.user),L=(GRP.list||[]).filter(function(x){return x.key!==me;});L.push({key:me,num:S.user.num,name:S.user.name,jig:S.jig||"",s3:missing(3).length===0,me:true});
+  return L.sort(function(a,b){return (+a.num||0)-(+b.num||0);});}
+function grpBox(st){if(!S.grp)return '<div class="todo" id="grp-box">맨 위 이름 옆에서 <b>모둠</b>을 먼저 고르세요. 그래야 우리 모둠 친구들이 고른 자료가 보입니다.</div>';
+  if(!GRP.list)return '<div class="q" id="grp-box"><b>우리 모둠('+esc(S.grp)+'모둠)</b><p class="count">모둠 친구들 기록을 불러오는 중입니다…</p></div>';
+  var M=grpMembers(),by={};ML.forEach(function(m){by[m]=[];});var none=[];M.forEach(function(x){if(by[x.jig])by[x.jig].push(x);else none.push(x);});
+  var nm=function(x){return esc(x.name)+(x.me?"(나)":"")+(st===4?(x.s3?" ✓":" <span class=\"count\">분석 중</span>"):"");};
+  var ck=grpNeed(by,M.length);
+  var cells=ML.map(function(m){var a=by[m],bad=ck.red[m];return '<tr><th style="width:30%">'+m+' '+esc(MAT[m].n)+'</th><td'+(bad?' style="color:#c0392b"':'')+'>'+(a.length?a.map(nm).join(", ")+(a.length>1?" · 겹침":""):(bad?"아직 아무도 고르지 않음":"맡지 않아도 됨"))+'</td></tr>';}).join("");
+  var tip=st===3?(S.jig?(by[S.jig].length>1&&ck.miss.length?'<p class="count" style="color:#c0392b">내가 고른 자료를 모둠 친구도 골랐습니다. 아직 아무도 고르지 않은 자료('+ck.miss.join(", ")+')를 친구와 이야기해 나누어 맡으세요.</p>':''):(ck.miss.length?'<p class="count">아직 아무도 고르지 않은 자료('+ck.miss.join(", ")+')를 맡으면 모둠에서 자료를 모두 나눌 수 있습니다.</p>':'')):
+    '<p class="count">✓ 표시는 3단계 분석을 마친 친구입니다. 친구의 설명을 듣고 아래에 정리하세요.</p>';
+  return '<div class="q" id="grp-box"><b>우리 모둠('+esc(S.grp)+'모둠)'+(st===4?' · 모둠원 '+M.length+'명':' · 고른 자료')+'</b><table class="chk" style="margin-top:6px">'+cells+'</table>'+
+    (none.length?'<p class="count">아직 자료를 고르지 않은 친구: '+none.map(function(x){return esc(x.name)+(x.me?"(나)":"");}).join(", ")+'</p>':'')+tip+'</div>';}
+function grpPaint(){var b=$("#grp-box");if(b&&(S.step===3||S.step===4)){var t=document.createElement("div");t.innerHTML=grpBox(S.step);b.replaceWith(t.firstChild);}}
+var _gV3=V[3];V[3]=function(){return _gV3().replace('<div class="jig">',grpBox(3)+'<div class="jig">');};
+var _gV4=V[4];V[4]=function(){var h=_gV4(),i=h.indexOf('<div class="care">');return i<0?h:h.slice(0,i)+grpBox(4)+h.slice(i);};
+var _gJig=A.jig;if(_gJig)A.jig=function(d){_gJig(d);setTimeout(liveSend,400);setTimeout(grpFetch,1600);};
+setInterval(function(){if(S.user&&(S.step===3||S.step===4))grpFetch();},15000);
+var _gRender=render;render=function(keep){var st=S.step;_gRender(keep);if(S.user&&S.grp&&(S.step===3||S.step===4)&&!T&&!LV&&!viewState&&(!GRP.list||Date.now()-GRP.at>8000))setTimeout(grpFetch,300);};
+/* 교사용: 모둠별 자료 나누기 표 */
+function grpFlags(r){var x=String(r.done||"").split("|"),f=(x[1]||"").split(",");return {steps:x[0]||"",grp:f[5]||"",jig:f[6]||""};}
+function grpTeacher(){var E=(typeof rvEnded==="function")?rvEnded():{},rows=(LV.rows||[]).filter(function(r){return (!LV.filter||String(r.ban)===LV.filter)&&!E[String(r.ban)];});if(!rows.length)return "";
+  var bans={};rows.forEach(function(r){var f=grpFlags(r),b=String(r.ban);(bans[b]=bans[b]||{g:{},none:[]});if(f.grp)(bans[b].g[f.grp]=bans[b].g[f.grp]||[]).push({r:r,f:f});else bans[b].none.push(r);});
+  var out=Object.keys(bans).sort(function(a,b){return +a-+b;}).map(function(b){var G=bans[b],gs=Object.keys(G.g).sort(function(a,c){return +a-+c;}),warn=0;
+    var trs=gs.map(function(g){var L=G.g[g],by={};ML.forEach(function(m){by[m]=[];});var none=[];L.forEach(function(x){if(by[x.f.jig])by[x.f.jig].push(x);else none.push(x);});
+      var ck=grpNeed(by,L.length),bad=ck.miss.length>0;if(bad)warn++;
+      return '<tr><th>'+esc(g)+'모둠 <span class="count">'+L.length+'명</span></th>'+ML.map(function(m){var a=by[m],c=ck.red[m]?' style="color:#c0392b;background:#fdecea"':"";
+        return '<td'+c+'>'+(a.length?a.map(function(x){return esc(x.r.name)+(x.f.steps.charAt(3)==="1"?" ✓":"");}).join(", ")+(a.length>1?" (겹침)":""):(ck.red[m]?"비어 있음":"—"))+'</td>';}).join("")+
+        '<td>'+(none.length?none.map(function(x){return esc(x.r.name);}).join(", "):"")+'</td></tr>';}).join("");
+    return '<h3 style="font-size:1.05rem;margin:10px 0 4px">'+esc(b)+'반 · 모둠 '+gs.length+'개'+(warn?' · <span style="color:#c0392b">맡은 사람이 없는 자료가 있는 모둠 '+warn+'개</span>':' · 모든 모둠이 자료를 다 나눠 맡음')+'</h3>'+
+      '<div class="tablebox"><table class="chk"><thead><tr><th>모둠</th>'+ML.map(function(m){return '<th>'+m+' '+esc(MAT[m].n)+'</th>';}).join("")+'<th>자료 안 고름</th></tr></thead><tbody>'+trs+'</tbody></table></div>'+
+      (G.none.length?'<p class="count" style="color:#c0392b">모둠을 고르지 않은 학생: '+G.none.map(function(r){return esc(r.num)+"번 "+esc(r.name);}).join(", ")+'</p>':'');}).join("");
+  return '<div class="card stack"><div class="head"><h2>모둠별 자료 나누기 (직소)</h2><span class="meta">✓ 3단계 분석 마침 · 붉은 칸은 맡은 사람이 없거나 그 때문에 겹친 자료 · 3명 모둠은 C·D 중 하나만 맡아도 됨</span></div>'+out+'</div>';}
+var _gLive=liveView;liveView=function(){var h=_gLive();if(!LV||!LV.key||LV.sum)return h;var t=grpTeacher();if(!t)return h;var i=h.indexOf('<div class="tablebox">');if(i<0)return h;var j=h.lastIndexOf('<div class="card',i);return j<0?h:h.slice(0,j)+t+h.slice(j);};
 setInterval(liveSend,20000);setTimeout(liveSend,3000);
 (function(){var k=lsGet(PRE+"last"),d=k&&lsGet(k);if(d){try{S=Object.assign(fresh(),JSON.parse(d));}catch(e){S=fresh();}}})();
 render();
