@@ -784,6 +784,16 @@ var _rvRender=render;render=function(keep){_rvRender(keep);if(MIG&&!S.user&&!vie
   if(RVV){$("#nav").classList.add("hide");$("#main").innerHTML=rvView();if(!keep)window.scrollTo(0,0);}
   else if(RV.open)$("#main").insertAdjacentHTML("afterbegin",rvBanner());};
 setInterval(rvPoll,30000);setTimeout(rvPoll,1500);
+/* 교사용 실시간 보기: 창을 보지 않을 때와 모든 반을 [수업 종료]했을 때는 10초 읽기를 멈춘다 */
+var LVP={paused:""};
+function lvAllEnded(){if(!LV||!LV.rows||!LV.rows.length)return false;var E=rvEnded();return LV.rows.every(function(r){return !!E[String(r.ban)];});}
+var _lvPoll=livePoll;livePoll=function(force){if(!LV||!LV.key)return _lvPoll();
+  if(force!==true){if(document.hidden){LVP.paused="hidden";return;}if(lvAllEnded()){if(LVP.paused!=="ended"){LVP.paused="ended";if(!viewState)render(true);}return;}}
+  LVP.paused="";_lvPoll();};
+A.lrefresh=function(){livePoll(true);};
+var _lvEnd=A.rvend;A.rvend=function(d){_lvEnd(d);if(d.v==="0")setTimeout(function(){livePoll(true);},900);};
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&LV&&LV.key&&LVP.paused==="hidden")livePoll(true);});
+var _lvView=liveView;liveView=function(){var h=_lvView();return LVP.paused==="ended"?h.replace("10초마다 새로 읽음",'<b style="color:#c0392b">자동 새로 읽기 멈춤 · 모든 반 수업 종료 · [지금 새로 읽기]나 [다시 보기]를 누르면 다시 읽음</b>'):h;};
 /* ---------- 모둠 (32차시 직소): 모둠 고르기, 우리 모둠이 고른 자료, 교사용 모둠별 표 ---------- */
 var GRP_MAX=9,GRP_PEND="",GRP={list:null,at:0,busy:false,key:""};
 /* 직소 규칙: 4명 이상이면 A~D 모두, 3명이면 A·B와 C·D 중 하나 (질문이 많은 A·B를 먼저 맡음) */
