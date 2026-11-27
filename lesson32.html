@@ -848,6 +848,19 @@ function grpTeacher(){var E=(typeof rvEnded==="function")?rvEnded():{},rows=(LV.
       (G.none.length?'<p class="count" style="color:#c0392b">모둠을 고르지 않은 학생: '+G.none.map(function(r){return esc(r.num)+"번 "+esc(r.name);}).join(", ")+'</p>':'');}).join("");
   return '<div class="card stack"><div class="head"><h2>모둠별 자료 나누기 (직소)</h2><span class="meta">✓ 3단계 분석 마침 · 붉은 칸은 맡은 사람이 없거나 그 때문에 겹친 자료 · 3명 모둠은 C·D 중 하나만 맡아도 됨</span></div>'+out+'</div>';}
 var _gLive=liveView;liveView=function(){var h=_gLive();if(!LV||!LV.key||LV.sum)return h;var t=grpTeacher();if(!t)return h;var i=h.indexOf('<div class="tablebox">');if(i<0)return h;var j=h.lastIndexOf('<div class="card',i);return j<0?h:h.slice(0,j)+t+h.slice(j);};
+/* 자료 다시 고르기: 분석을 시작해 잠긴 자료를 선생님 비밀번호(서버에서 확인)로 풀고, 잘못 고른 자료에 쓴 답은 지운다 */
+var JUN=false;
+var _gV3b=V[3];V[3]=function(){var h=_gV3b(),t='잘못 골랐다면 선생님께 알려 주세요.</p>';if(h.indexOf(t)<0)return h;
+  var box=JUN?'<div class="q" style="margin-top:6px"><b>선생님 확인</b><p class="count">선생님이 비밀번호를 적으면 지금 자료('+esc(S.jig)+')에 쓴 답이 지워지고 자료를 다시 고를 수 있습니다.</p><input type="password" id="jun-key" autocomplete="off" style="width:10em"> <button class="btn" data-act="jigok">확인</button> <button class="btn ghost" data-act="jigun">취소</button></div>':
+    ' <button class="btn ghost" data-act="jigun" style="padding:2px 10px">자료 다시 고르기(선생님 확인)</button>';
+  return h.replace(t,t+box);};
+A.jigun=function(){JUN=!JUN;render(true);if(JUN)setTimeout(function(){var k=$("#jun-key");if(k)k.focus();},50);};
+A.jigok=function(){var el=$("#jun-key"),k=el?el.value.trim():"";if(!k){toast("비밀번호를 적어 주세요.");return;}if(!LIVE_URL){toast("연결 주소가 없습니다.");return;}
+  fetch(LIVE_URL+(LIVE_URL.indexOf("?")<0?"?":"&")+"action=rels&act="+ACT+"&key="+encodeURIComponent(k)+"&t="+Date.now()).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok){toast("비밀번호가 맞지 않습니다.");if(el)el.value="";return;}
+    var m=S.jig,mk=matKeys(m);[mk.p,mk.s].forEach(function(x){delete S.c[x];});mk.w.forEach(function(x){delete S.w[x];});
+    S.jig="";JUN=false;TBV.pg=0;GRP.list=null;touch();saveNow();render(true);setTimeout(liveSend,400);setTimeout(grpFetch,1200);toast(m+" 자료를 풀었습니다. 맡을 자료를 다시 고르세요.");
+  }).catch(function(){toast("확인하지 못했습니다. 인터넷 연결을 확인해 주세요.");});};
 setInterval(liveSend,20000);setTimeout(liveSend,3000);
 (function(){var k=lsGet(PRE+"last"),d=k&&lsGet(k);if(d){try{S=Object.assign(fresh(),JSON.parse(d));}catch(e){S=fresh();}}})();
 render();
